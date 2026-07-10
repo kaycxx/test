@@ -32,25 +32,6 @@ enum class command {
 };
 
 /**
- * Parses a command-line color mode.
- *
- * @param value  Command-line value.
- * @returns Parsed ANSI mode, or no value when the value is invalid.
- */
-std::optional<kaycxx::term::ansi_mode> parse_ansi_mode(std::string_view value) {
-    if (value == "auto" || value == "automatic") {
-        return kaycxx::term::ansi_mode::automatic;
-    }
-    if (value == "always") {
-        return kaycxx::term::ansi_mode::always;
-    }
-    if (value == "never") {
-        return kaycxx::term::ansi_mode::never;
-    }
-    return std::nullopt;
-}
-
-/**
  * Quotes a value as a CMake bracket argument.
  *
  * @param value  Value to quote.
@@ -102,8 +83,7 @@ bool write_ctest_file(test_registry const& registry, std::string_view file_name,
         if (name_counts[test.description] > 1) {
             test_name += " [" + test.id + "]";
         }
-        output << "add_test(" << cmake_quote(test_name) << " " << cmake_quote(executable) << " --run-test " << cmake_quote(test.id)
-               << " --color never)\n";
+        output << "add_test(" << cmake_quote(test_name) << " " << cmake_quote(executable) << " --run-test " << cmake_quote(test.id) << ")\n";
     }
     return true;
 }
@@ -115,9 +95,8 @@ bool write_ctest_file(test_registry const& registry, std::string_view file_name,
  */
 void print_usage(std::ostream& output) {
     output << "Usage:\n"
-           << "  test-binary [--color auto|always|never]\n"
            << "  test-binary --list-tests\n"
-           << "  test-binary --run-test <id> [--color auto|always|never]\n"
+           << "  test-binary --run-test <id>\n"
            << "  test-binary --write-ctest <file> <executable>\n";
 }
 
@@ -161,19 +140,6 @@ int run_tests(int argc, char* argv[]) {
             }
             selected_command = command::run_test;
             run_test_id = std::string_view(argv[++index]);
-            continue;
-        }
-        if (argument == "--color") {
-            if (index + 1 >= argc) {
-                std::cerr << "--color requires auto, always, or never\n";
-                return 2;
-            }
-            auto const parsed_mode = parse_ansi_mode(argv[++index]);
-            if (!parsed_mode) {
-                std::cerr << "Invalid color mode: " << argv[index] << '\n';
-                return 2;
-            }
-            ansi_mode = *parsed_mode;
             continue;
         }
 
