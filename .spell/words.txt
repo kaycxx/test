@@ -6,6 +6,7 @@ COLORSTYLE
 DKAYCXX
 endforeach
 endfunction
+fsanitize
 GitDeps
 includedir
 kaycxx
