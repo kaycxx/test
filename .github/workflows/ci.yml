@@ -19,7 +19,7 @@ jobs:
       - name: Build project
         run: cmake --build --preset debug
       - name: Run tests
-        run: cmake --build --preset debug --target test
+        run: FORCE_COLOR=1 cmake --build --preset debug --target test
       - name: Create API Doc
         run: cmake --build --preset debug --target apidoc
       - name: Install project
