@@ -8,6 +8,7 @@ endforeach
 endfunction
 fsanitize
 GitDeps
+graphviz
 includedir
 kaycxx
 libgtest
