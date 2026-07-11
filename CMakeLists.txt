@@ -15,8 +15,8 @@ include(GNUInstallDirs)
 include(cmake/CompilerWarnings.cmake)
 include(cmake/GitDeps.cmake)
 
-git_require(kaycxx::assert v0.0.2)
-git_require(kaycxx::term v0.0.1)
+git_require(kaycxx::assert 0.0.3)
+git_require(kaycxx::term 0.0.2)
 
 set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

@@ -35,7 +35,7 @@ suite("run_tests") {
 
         auto output = std::ostringstream();
 
-        assert_equal(run_tests(current_test_registry(), output, kaycxx::term::ansi_mode::never), 0);
+        assert_equal(run_tests(current_test_registry(), output, kaycxx::term::ansi_mode::none), 0);
         assert_contain(output.str(), "1 tests, 1 passing");
         assert_not_contain(output.str(), "\033[");
     });
@@ -47,7 +47,7 @@ suite("run_tests") {
 
         auto output = std::ostringstream();
 
-        assert_equal(run_tests(current_test_registry(), output, kaycxx::term::ansi_mode::always), 0);
+        assert_equal(run_tests(current_test_registry(), output, kaycxx::term::ansi_mode::formatting_only), 0);
         auto const text = output.str();
         assert_contain(text, "\033[1mcolors\033[22m");
         assert_contain(text, "\033[32m\033[1m");
@@ -64,7 +64,7 @@ suite("run_tests") {
 
         auto output = std::ostringstream();
 
-        assert_equal(run_tests(current_test_registry(), output, kaycxx::term::ansi_mode::never), 1);
+        assert_equal(run_tests(current_test_registry(), output, kaycxx::term::ansi_mode::none), 1);
         auto const text = output.str();
         assert_contain(text, "1 tests, 0 passing");
         assert_contain(text, "1 failing");
@@ -86,7 +86,7 @@ suite("run_tests") {
 
         auto output = std::ostringstream();
 
-        assert_equal(run_test(current_test_registry(), "2", output, kaycxx::term::ansi_mode::never), 0);
+        assert_equal(run_test(current_test_registry(), "2", output, kaycxx::term::ansi_mode::none), 0);
         assert_false(first_ran);
         assert_true(second_ran);
         auto const text = output.str();
@@ -110,7 +110,7 @@ suite("run_tests") {
 
         auto output = std::ostringstream();
 
-        assert_equal(run_tests(current_test_registry(), output, kaycxx::term::ansi_mode::never), 0);
+        assert_equal(run_tests(current_test_registry(), output, kaycxx::term::ansi_mode::none), 0);
         assert_false(before_each_ran);
         assert_false(body_ran);
         auto const text = output.str();
@@ -137,7 +137,7 @@ suite("run_tests") {
 
         auto output = std::ostringstream();
 
-        assert_equal(run_tests(current_test_registry(), output, kaycxx::term::ansi_mode::never), 1);
+        assert_equal(run_tests(current_test_registry(), output, kaycxx::term::ansi_mode::none), 1);
         assert_false(body_ran);
         auto const text = output.str();
         assert_contain(text, "2 tests, 0 passing");
@@ -160,7 +160,7 @@ suite("run_tests") {
 
         auto output = std::ostringstream();
 
-        assert_equal(run_tests(current_test_registry(), output, kaycxx::term::ansi_mode::never), 1);
+        assert_equal(run_tests(current_test_registry(), output, kaycxx::term::ansi_mode::none), 1);
         assert_true(body_ran);
         auto const text = output.str();
         assert_contain(text, "1 tests, 1 passing");
