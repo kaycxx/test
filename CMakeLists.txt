@@ -16,6 +16,7 @@ include(cmake/CompilerWarnings.cmake)
 include(cmake/GitDeps.cmake)
 
 git_require(kaycxx::assert 0.0.3)
+git_require(kaycxx::cli 0.0.4)
 git_require(kaycxx::term 0.0.2)
 
 set(CMAKE_CXX_STANDARD 26)
@@ -61,6 +62,7 @@ target_include_directories(${PACKAGE_NAME} PUBLIC
 target_compile_features(${PACKAGE_NAME} PUBLIC cxx_std_${CMAKE_CXX_STANDARD})
 target_compile_definitions(${PACKAGE_NAME} INTERFACE KAYCXX_ASSERT_SOURCE_LOCATION)
 target_link_libraries(${PACKAGE_NAME} PUBLIC kaycxx::assert)
+target_link_libraries(${PACKAGE_NAME} PUBLIC kaycxx::cli)
 target_link_libraries(${PACKAGE_NAME} PUBLIC kaycxx::term)
 
 include(cmake/Install.cmake)
