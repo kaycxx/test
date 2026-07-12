@@ -6,6 +6,6 @@ includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
 Name: @PACKAGE_NAME@
 Description: @PROJECT_DESCRIPTION@
 Version: @PROJECT_VERSION@
-Requires: kaycxx-assert >= 0.0.3, kaycxx-cli >= 0.0.5, kaycxx-term >= 0.0.2
+Requires: kaycxx-assert >= 0.0.4, kaycxx-cli >= 0.0.6, kaycxx-term >= 0.0.3
 Libs: -L${libdir} -l@PACKAGE_NAME@
 Cflags: -I${includedir} -DKAYCXX_ASSERT_LOCATION
