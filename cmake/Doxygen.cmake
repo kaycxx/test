@@ -9,6 +9,7 @@ if(DOXYGEN_FOUND)
     add_custom_target(apidoc
         COMMAND "${CMAKE_COMMAND}" -E rm -rf "${CMAKE_CURRENT_BINARY_DIR}/apidoc"
         COMMAND "${DOXYGEN_EXECUTABLE}" "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
+        COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/docs/assets" "${CMAKE_CURRENT_BINARY_DIR}/apidoc/html/docs/assets"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         COMMENT "Generating API documentation"
         VERBATIM

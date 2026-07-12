@@ -64,39 +64,11 @@ Running the test executable produces a hierarchical report. The test framework a
 
 When both tests pass:
 
-```text
-Starting unit tests
-
-calculator
-  addition
-    ✓ adds positive numbers (1.2 µs)
-    ✓ adds negative numbers (820 ns)
-
-2 tests, 2 passing
-Finished in 18.4 µs
-```
+<img src="docs/assets/example-output-passing.svg" alt="Passing test output" width="100%" height="209">
 
 If addition incorrectly returns `5` instead of `-5` for the negative numbers:
 
-```text
-Starting unit tests
-
-calculator
-  addition
-    ✓ adds positive numbers (1.2 µs)
-    ✗ adds negative numbers (1) (4.6 µs)
-
-Failures:
-
-  1) calculator addition adds negative numbers:
-
-        Expected <5> to equal <-5>
-
-        at test/calculator.test.cpp:14:13
-
-2 tests, 1 passing, 1 failing
-Finished in 31.7 µs
-```
+<img src="docs/assets/example-output-failing.svg" alt="Failing test output" width="100%" height="369">
 
 ## Guides
 

@@ -1,0 +1,71 @@
+<!-- SPDX-FileCopyrightText: 2026 Klaus Reimer <k@ailis.de> -->
+<!-- SPDX-License-Identifier: MIT -->
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="209" role="img" aria-labelledby="title description">
+    <title id="title">Passing kaycxx-test output</title>
+    <desc id="description">Terminal output for a test run with two passing tests.</desc>
+
+    <style>
+        :root {
+            color-scheme: light dark;
+            --background: #F8F9FA;
+            --foreground: #37474F;
+            --muted: #969696;
+            --border: #dedede;
+            --success: #1a7f37;
+            --failure: #b61825;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: #282c34;
+                --foreground: #dbe4eb;
+                --muted: #999999;
+                --border: #38393b;
+                --success: #7ec699;
+                --failure: #f5b1aa;
+            }
+        }
+
+        .frame {
+            fill: var(--background);
+            stroke: var(--border);
+        }
+
+        text {
+            fill: var(--foreground);
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+            font-size: 14px;
+        }
+
+        .bold {
+            font-weight: 700;
+        }
+
+        .muted {
+            fill: var(--muted);
+        }
+
+        .success {
+            fill: var(--success);
+        }
+
+        .failure {
+            fill: var(--failure);
+        }
+    </style>
+
+    <rect class="frame" x="0.5" y="0.5" width="calc(100% - 1px)" height="208" rx="8"/>
+    <g>
+        <text x="17" y="28.5">Starting unit tests</text>
+        <text class="bold" x="17" y="68.5">calculator</text>
+        <text class="bold" x="34" y="88.5">addition</text>
+        <text class="success bold" x="51" y="108.5">✓</text>
+        <text x="68" y="108.5">adds positive numbers</text>
+        <text class="muted" x="253" y="108.5">(1.2 µs)</text>
+        <text class="success bold" x="51" y="128.5">✓</text>
+        <text x="68" y="128.5">adds negative numbers</text>
+        <text class="muted" x="253" y="128.5">(820 ns)</text>
+        <text x="17" y="168.5">2 tests, <tspan class="success">2 passing</tspan></text>
+        <text x="17" y="188.5">Finished in 18.4 µs</text>
+    </g>
+</svg>
