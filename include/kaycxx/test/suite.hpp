@@ -8,6 +8,7 @@
  * Defines the suite macro for top-level test suite registration.
  */
 
+#include <source_location>
 #include <string_view>
 
 #include <kaycxx/test/callback.hpp>
@@ -21,8 +22,9 @@ namespace kaycxx::test::detail {
  *
  * @param description  Human-readable suite description.
  * @param body         Registration callback that defines child suites, tests, and hooks.
+ * @param location     Source location of the suite declaration.
  */
-void define_root_suite(std::string_view description, callback body);
+void define_root_suite(std::string_view description, callback body, std::source_location location = std::source_location::current());
 
 } // namespace kaycxx::test::detail
 /** @endcond */
@@ -33,7 +35,11 @@ void define_root_suite(std::string_view description, callback body);
 #define KAYCXX_TEST_SUITE(description, id) \
     static void KAYCXX_TEST_CONCAT(_kaycxx_test_suite_body_, id)(); \
     [[maybe_unused]] static const bool KAYCXX_TEST_CONCAT(_kaycxx_test_suite_, id) = [] { \
-        ::kaycxx::test::detail::define_root_suite(description, KAYCXX_TEST_CONCAT(_kaycxx_test_suite_body_, id)); \
+        ::kaycxx::test::detail::define_root_suite( \
+            description, \
+            KAYCXX_TEST_CONCAT(_kaycxx_test_suite_body_, id), \
+            ::std::source_location::current() \
+        ); \
         return true; \
     }(); \
     static void KAYCXX_TEST_CONCAT(_kaycxx_test_suite_body_, id)()

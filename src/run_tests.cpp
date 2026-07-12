@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <regex>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -35,12 +36,36 @@ std::string cmake_quote(std::string_view value) {
  * Writes registered tests as tab-separated id and description pairs.
  *
  * @param registry  Registry containing the tests to list.
+ * @param filter    Test selection filter.
  * @param output    Output stream receiving the test list.
  */
-void write_test_list(test_registry const& registry, std::ostream& output) {
-    for (auto const& test : registry.list_tests()) {
+void write_test_list(test_registry const& registry, test_filter const& filter, std::ostream& output) {
+    for (auto const& test : registry.list_tests(filter)) {
         output << test.id << '\t' << test.description << '\n';
     }
+}
+
+/**
+ * Runs tests selected by a filter with the default reporter.
+ *
+ * @param registry   Registry containing the tests to run.
+ * @param output     Output stream receiving test output.
+ * @param ansi_mode  ANSI output mode.
+ * @param filter     Test selection filter.
+ * @returns Process exit code.
+ */
+int run_filtered_tests(test_registry& registry, std::ostream& output, kaycxx::term::ansi_mode ansi_mode, test_filter const& filter) {
+    auto const num_tests = registry.num_test_cases(filter);
+    if (num_tests == 0 && (!filter.paths.empty() || filter.name_pattern)) {
+        output << "No tests matched\n";
+        return 1;
+    }
+
+    auto reporter = detail::default_reporter(output, ansi_mode);
+    reporter.before_test_suites(registry.num_test_suites(filter), num_tests);
+    auto const passed = registry.run(reporter, filter);
+    reporter.after_test_suites();
+    return passed ? 0 : 1;
 }
 
 /**
@@ -89,6 +114,8 @@ int run_tests(int argc, char* argv[]) {
     auto list_tests = app.flag("list-tests", "List registered tests").action();
     auto selected_test = app.option<std::string>("run-test", "ID", "Run one registered test").action();
     auto ctest_file = app.option<std::string>("write-ctest", "FILE", "Write registered tests to a CTest include file").action();
+    auto name_pattern = app.option<std::string>("test-name-pattern", 't', "PATTERN", "Run tests whose full description matches PATTERN");
+    auto paths = app.parameters<std::string>("PATH", "Run tests from matching files or directories");
 
     try {
         auto arguments = app.parse(argc, argv);
@@ -98,8 +125,14 @@ int run_tests(int argc, char* argv[]) {
 
         arguments.validate();
 
+        auto filter = test_filter();
+        filter.paths = arguments.get(paths);
+        if (arguments.has(name_pattern)) {
+            filter.name_pattern = arguments.get(name_pattern);
+        }
+
         if (arguments.get(list_tests)) {
-            write_test_list(default_registry(), std::cout);
+            write_test_list(default_registry(), filter, std::cout);
             return 0;
         }
         if (arguments.has(selected_test)) {
@@ -114,10 +147,13 @@ int run_tests(int argc, char* argv[]) {
             return 0;
         }
 
-        return run_tests(std::cout, kaycxx::term::ansi_mode::automatic);
+        return run_filtered_tests(default_registry(), std::cout, kaycxx::term::ansi_mode::automatic, filter);
     } catch (kaycxx::cli::parse_error const& error) {
         std::cerr << app.name() << ": " << error.what() << '\n';
         std::cerr << "Try '" << app.name() << " --help' for more information.\n";
+        return 2;
+    } catch (std::regex_error const& error) {
+        std::cerr << app.name() << ": Invalid test name pattern (" << error.what() << ")\n";
         return 2;
     }
 }

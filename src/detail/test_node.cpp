@@ -5,12 +5,14 @@
 
 #include <format>
 
+#include "test_matcher.hpp"
 #include "test_suite.hpp"
 
 namespace kaycxx::test::detail {
 
-test_node::test_node(std::string_view description, test_suite* parent)
+test_node::test_node(std::string_view description, std::source_location location, test_suite* parent)
     : description_(description),
+      location_(location),
       parent_(parent)
 {}
 
@@ -27,6 +29,10 @@ std::string test_node::full_description() const {
         return description_;
     }
     return std::format("{} {}", parent_description, description_);
+}
+
+bool test_node::matches_path(test_matcher const& matcher) const {
+    return matcher.matches_path(location_) || (parent_ != nullptr && parent_->matches_path(matcher));
 }
 
 } // namespace kaycxx::test::detail

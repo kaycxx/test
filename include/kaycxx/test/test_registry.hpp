@@ -19,6 +19,7 @@
 #include <kaycxx/test/hook.hpp>
 #include <kaycxx/test/reporter.hpp>
 #include <kaycxx/test/skip.hpp>
+#include <kaycxx/test/test_filter.hpp>
 
 namespace kaycxx::test::detail {
 
@@ -60,8 +61,9 @@ public:
      *
      * @param description  Human-readable suite description.
      * @param body         Registration callback that defines child suites, tests, and hooks.
+     * @param location     Source location of the suite declaration.
      */
-    void add_suite(std::string_view description, callback body);
+    void add_suite(std::string_view description, callback body, std::source_location location = std::source_location::current());
 
     /**
      * Adds a test case to the current suite.
@@ -119,6 +121,19 @@ public:
     bool run(reporter& reporter);
 
     /**
+     * Executes registered tests selected by a filter.
+     *
+     * Suites without selected tests are not executed or reported. Suite hooks execute once for each selected suite.
+     *
+     * @param reporter  Reporter receiving lifecycle events.
+     * @param filter    Test selection filter.
+     * @returns True if all selected suites passed, false if any selected suite failed.
+     *
+     * @throws std::regex_error  When the test name pattern is not a valid regular expression.
+     */
+    bool run(reporter& reporter, test_filter const& filter);
+
+    /**
      * Executes one registered test case by id.
      *
      * @param id        Test id from list_tests().
@@ -135,6 +150,18 @@ public:
     std::vector<test_info> list_tests() const;
 
     /**
+     * Lists registered test cases selected by a filter in execution order.
+     *
+     * Test ids remain stable and correspond to the unfiltered test list.
+     *
+     * @param filter  Test selection filter.
+     * @returns Selected registered test cases.
+     *
+     * @throws std::regex_error  When the test name pattern is not a valid regular expression.
+     */
+    std::vector<test_info> list_tests(test_filter const& filter) const;
+
+    /**
      * Returns the number of all registered top-level and nested suites.
      *
      * @returns The number of all registered top-level and nested suites.
@@ -142,11 +169,31 @@ public:
     std::size_t num_test_suites() const;
 
     /**
+     * Returns the number of suites containing tests selected by a filter.
+     *
+     * @param filter  Test selection filter.
+     * @returns The number of selected top-level and nested suites.
+     *
+     * @throws std::regex_error  When the test name pattern is not a valid regular expression.
+     */
+    std::size_t num_test_suites(test_filter const& filter) const;
+
+    /**
      * Returns the number of all registered test cases.
      *
      * @returns The number of all registered test cases.
      */
     std::size_t num_test_cases() const;
+
+    /**
+     * Returns the number of test cases selected by a filter.
+     *
+     * @param filter  Test selection filter.
+     * @returns The number of selected test cases.
+     *
+     * @throws std::regex_error  When the test name pattern is not a valid regular expression.
+     */
+    std::size_t num_test_cases(test_filter const& filter) const;
 
 private:
     /** Top-level suites in registration order. */
@@ -166,9 +213,10 @@ private:
      * Adds a top-level or nested suite without running a registration body.
      *
      * @param description  Human-readable suite description.
+     * @param location     Source location of the suite declaration.
      * @returns The created suite.
      */
-    detail::test_suite& add_suite_node(std::string_view description);
+    detail::test_suite& add_suite_node(std::string_view description, std::source_location location);
 };
 
 /**

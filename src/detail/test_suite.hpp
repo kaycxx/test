@@ -24,6 +24,8 @@
 
 namespace kaycxx::test::detail {
 
+class test_matcher;
+
 /**
  * Internal executable node representing a test suite.
  *
@@ -35,17 +37,19 @@ public:
      * Creates a test suite.
      *
      * @param description  Human-readable suite description.
+     * @param location     Source location of the suite declaration.
      * @param parent       Optional parent suite.
      */
-    explicit test_suite(std::string_view description, test_suite* parent = nullptr);
+    explicit test_suite(std::string_view description, std::source_location location, test_suite* parent = nullptr);
 
     /**
      * Adds a nested suite.
      *
      * @param description  Human-readable suite description.
+     * @param location     Source location of the suite declaration.
      * @returns The created nested suite.
      */
-    test_suite& add_suite(std::string_view description);
+    test_suite& add_suite(std::string_view description, std::source_location location);
 
     /**
      * Adds a test case to this suite.
@@ -109,6 +113,15 @@ public:
     bool run(reporter& reporter) override;
 
     /**
+     * Executes selected tests in this suite, including suite hooks and selected child nodes.
+     *
+     * @param reporter  Reporter receiving lifecycle events.
+     * @param matcher   Test filter matcher.
+     * @returns True if the selected tests passed or no tests are selected, false otherwise.
+     */
+    bool run(reporter& reporter, test_matcher const& matcher);
+
+    /**
      * Executes one registered test case by numeric id.
      *
      * @param target_id   Numeric test id to run.
@@ -127,14 +140,39 @@ public:
     void list_tests(std::vector<test_info>& tests, std::size_t& next_id) const;
 
     /**
+     * Adds selected test cases below this suite to a test list.
+     *
+     * @param tests    Test list receiving selected test cases.
+     * @param next_id  Next numeric test id in the unfiltered tree.
+     * @param matcher  Test filter matcher.
+     */
+    void list_tests(std::vector<test_info>& tests, std::size_t& next_id, test_matcher const& matcher) const;
+
+    /**
      * @returns The number of registered test suites.
      */
     std::size_t num_test_suites() const;
 
     /**
+     * Returns the number of nested suites containing selected tests.
+     *
+     * @param matcher  Test filter matcher.
+     * @returns The number of selected nested suites.
+     */
+    std::size_t num_test_suites(test_matcher const& matcher) const;
+
+    /**
      * @returns The number of registered test cases.
      */
     std::size_t num_test_cases() const;
+
+    /**
+     * Returns the number of selected test cases below this suite.
+     *
+     * @param matcher  Test filter matcher.
+     * @returns The number of selected test cases.
+     */
+    std::size_t num_test_cases(test_matcher const& matcher) const;
 
 private:
     /** Child suites and test cases in declaration order. */
@@ -160,6 +198,15 @@ private:
      * @returns Number of nested suites on the selected path, or no value when the test is not below this suite.
      */
     std::optional<std::size_t> selected_suite_count(std::size_t target_id, std::size_t& current_id) const;
+
+    /**
+     * Executes either the complete suite or its selected tests.
+     *
+     * @param reporter  Reporter receiving lifecycle events.
+     * @param matcher   Optional test filter matcher, or null to execute all tests.
+     * @returns True if the executed tests passed, false otherwise.
+     */
+    bool run(reporter& reporter, test_matcher const* matcher);
 
 };
 

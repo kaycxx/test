@@ -9,8 +9,8 @@
 
 namespace kaycxx::test {
 
-void describe(std::string_view description, callback body) {
-    active_registry().add_suite(description, std::move(body));
+void describe(std::string_view description, callback body, std::source_location location) {
+    active_registry().add_suite(description, std::move(body), location);
 }
 
 } // namespace kaycxx::test

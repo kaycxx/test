@@ -8,6 +8,7 @@
  * Defines the describe function for nested test suites.
  */
 
+#include <source_location>
 #include <string_view>
 
 #include <kaycxx/test/callback.hpp>
@@ -21,7 +22,8 @@ namespace kaycxx::test {
  *
  * @param description  Human-readable suite description.
  * @param body         Registration callback that defines child suites, tests, and hooks.
+ * @param location     Source location of the describe() call.
  */
-void describe(std::string_view description, callback body);
+void describe(std::string_view description, callback body, std::source_location location = std::source_location::current());
 
 } // namespace kaycxx::test

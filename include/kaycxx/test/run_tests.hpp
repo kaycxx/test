@@ -26,7 +26,8 @@ int run_tests();
 /**
  * Runs the global test registry according to command-line arguments.
  *
- * Supported arguments are --help, --list-tests, --run-test, and --write-ctest.
+ * Positional path filters select tests by source file or directory. The -t and --test-name-pattern options select tests by their full descriptions.
+ * Supported actions are --help, --list-tests, --run-test, and --write-ctest.
  *
  * @param argc  Number of command-line arguments.
  * @param argv  Command-line argument values.

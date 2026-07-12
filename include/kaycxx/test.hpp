@@ -29,4 +29,5 @@ namespace test {}
 #include <kaycxx/test/skip.hpp>
 #include <kaycxx/test/skipped.hpp>
 #include <kaycxx/test/suite.hpp>
+#include <kaycxx/test/test_filter.hpp>
 #include <kaycxx/test/test_registry.hpp>

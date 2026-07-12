@@ -22,6 +22,7 @@
 
 namespace kaycxx::test::detail {
 
+class test_matcher;
 class test_suite;
 
 /**
@@ -55,6 +56,14 @@ public:
     bool run(reporter& reporter) override;
 
     /**
+     * Checks whether this test case is selected by a matcher.
+     *
+     * @param matcher  Test filter matcher.
+     * @returns True when source path and full-description filters match.
+     */
+    bool matches(test_matcher const& matcher) const;
+
+    /**
      * Adds this test case to a test list.
      *
      * @param tests    Test list receiving the test case.
@@ -65,9 +74,6 @@ public:
 private:
     /** Test callback to execute. */
     callback body_;
-
-    /** Source location of the it() call. */
-    std::source_location location_;
 
     /** Optional skip condition checked before before_each hooks and test code run. */
     std::optional<skip_condition> skip_condition_;

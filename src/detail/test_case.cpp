@@ -12,6 +12,7 @@
 #include <kaycxx/test/skipped.hpp>
 
 #include "hook_error.hpp"
+#include "test_matcher.hpp"
 #include "test_suite.hpp"
 
 namespace kaycxx::test::detail {
@@ -23,9 +24,8 @@ test_case::test_case(
     test_suite* parent,
     std::optional<skip_condition> skip_condition
 )
-    : test_node(description, parent),
+    : test_node(description, location, parent),
       body_(std::move(body)),
-      location_(location),
       skip_condition_(std::move(skip_condition))
 {}
 
@@ -51,6 +51,10 @@ bool test_case::run(reporter& reporter) {
         reporter.after_test_case(description_, failure(full_description(), location_));
     }
     return false;
+}
+
+bool test_case::matches(test_matcher const& matcher) const {
+    return matches_path(matcher) && matcher.matches_name(full_description());
 }
 
 void test_case::list_tests(std::vector<test_info>& tests, std::size_t& next_id) const {

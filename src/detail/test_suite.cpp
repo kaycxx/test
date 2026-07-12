@@ -10,15 +10,16 @@
 
 #include "hook_error.hpp"
 #include "test_case.hpp"
+#include "test_matcher.hpp"
 
 namespace kaycxx::test::detail {
 
-test_suite::test_suite(std::string_view description, test_suite* parent)
-    : test_node(description, parent)
+test_suite::test_suite(std::string_view description, std::source_location location, test_suite* parent)
+    : test_node(description, location, parent)
 {}
 
-test_suite& test_suite::add_suite(std::string_view description) {
-    auto suite = std::make_unique<test_suite>(description, this);
+test_suite& test_suite::add_suite(std::string_view description, std::source_location location) {
+    auto suite = std::make_unique<test_suite>(description, location, this);
     auto& suite_ref = *suite;
     children_.push_back(std::move(suite));
     return suite_ref;
@@ -67,20 +68,43 @@ void test_suite::run_after_each_hooks() {
 }
 
 bool test_suite::run(reporter& reporter) {
-    reporter.before_test_suite(description_, num_test_suites(), num_test_cases());
+    return run(reporter, nullptr);
+}
+
+bool test_suite::run(reporter& reporter, test_matcher const& matcher) {
+    return run(reporter, &matcher);
+}
+
+bool test_suite::run(reporter& reporter, test_matcher const* matcher) {
+    auto const num_suites = matcher == nullptr ? num_test_suites() : num_test_suites(*matcher);
+    auto const num_tests = matcher == nullptr ? num_test_cases() : num_test_cases(*matcher);
+    if (matcher != nullptr && num_tests == 0) {
+        return true;
+    }
+
+    reporter.before_test_suite(description_, num_suites, num_tests);
 
     try {
         for (auto& hook : before_all_hooks_) {
             hook.run();
         }
     } catch (hook_error const& error) {
-        reporter.after_test_suite(failure(full_description(), error, error.location()), num_test_cases());
+        reporter.after_test_suite(failure(full_description(), error, error.location()), num_tests);
         return false;
     }
 
     auto passed = true;
     for (auto& child : children_) {
-        passed = child->run(reporter) && passed;
+        auto* suite = dynamic_cast<test_suite*>(child.get());
+        if (suite != nullptr) {
+            passed = (matcher == nullptr ? suite->run(reporter) : suite->run(reporter, *matcher)) && passed;
+            continue;
+        }
+
+        auto& test = dynamic_cast<test_case&>(*child);
+        if (matcher == nullptr || test.matches(*matcher)) {
+            passed = test.run(reporter) && passed;
+        }
     }
 
     try {
@@ -157,12 +181,40 @@ void test_suite::list_tests(std::vector<test_info>& tests, std::size_t& next_id)
     }
 }
 
+void test_suite::list_tests(std::vector<test_info>& tests, std::size_t& next_id, test_matcher const& matcher) const {
+    for (auto const& child : children_) {
+        auto const* suite = dynamic_cast<test_suite const*>(child.get());
+        if (suite != nullptr) {
+            suite->list_tests(tests, next_id, matcher);
+            continue;
+        }
+
+        auto const& test = dynamic_cast<test_case const&>(*child);
+        if (test.matches(matcher)) {
+            test.list_tests(tests, next_id);
+        } else {
+            next_id++;
+        }
+    }
+}
+
 std::size_t test_suite::num_test_suites() const {
     std::size_t count = 0;
     for (auto& child : children_) {
         auto const* suite = dynamic_cast<test_suite const*>(child.get());
         if (suite != nullptr) {
             count = count + 1 + suite->num_test_suites();
+        }
+    }
+    return count;
+}
+
+std::size_t test_suite::num_test_suites(test_matcher const& matcher) const {
+    std::size_t count = 0;
+    for (auto const& child : children_) {
+        auto const* suite = dynamic_cast<test_suite const*>(child.get());
+        if (suite != nullptr && suite->num_test_cases(matcher) > 0) {
+            count = count + 1 + suite->num_test_suites(matcher);
         }
     }
     return count;
@@ -175,6 +227,19 @@ std::size_t test_suite::num_test_cases() const {
         if (suite != nullptr) {
             count = count + suite->num_test_cases();
         } else {
+            count++;
+        }
+    }
+    return count;
+}
+
+std::size_t test_suite::num_test_cases(test_matcher const& matcher) const {
+    std::size_t count = 0;
+    for (auto const& child : children_) {
+        auto const* suite = dynamic_cast<test_suite const*>(child.get());
+        if (suite != nullptr) {
+            count += suite->num_test_cases(matcher);
+        } else if (dynamic_cast<test_case const&>(*child).matches(matcher)) {
             count++;
         }
     }

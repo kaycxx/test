@@ -9,6 +9,7 @@
 #include <kaycxx/test.hpp>
 
 #include "support/recording_reporter.hpp"
+#include "support/test_registration.hpp"
 
 using namespace kaycxx::assert;
 using namespace kaycxx::test;
@@ -69,6 +70,86 @@ suite("test_registry") {
         assert_equal(tests.at(1).description, "root nested second");
         assert_equal(tests.at(2).id, "3");
         assert_equal(tests.at(2).description, "root nested third");
+    });
+
+    it("filters tests by source path and keeps their original ids", [] {
+        auto registry = test_registry();
+
+        registry.add_suite("root", [&] {
+            registry.add_test("first", [] {});
+            registry.add_test("second", [] {});
+        });
+        auto filter = test_filter();
+        filter.paths = { "missing", "test\\test_registry.test.cpp" };
+        filter.name_pattern = "second$";
+
+        auto const tests = registry.list_tests(filter);
+
+        assert_equal(tests.size(), 1uz);
+        assert_equal(tests.at(0).id, "2");
+        assert_equal(tests.at(0).description, "root second");
+    });
+
+    it("matches test paths inherited from parent suites", [] {
+        auto registry = test_registry();
+
+        registry.add_suite("root", [&] {
+            register_test_from_support(registry, "from support", [] {});
+        });
+        auto suite_filter = test_filter();
+        suite_filter.paths = { "test_registry.test.cpp" };
+        auto case_filter = test_filter();
+        case_filter.paths = { "test_registration.cpp" };
+
+        assert_equal(registry.list_tests(suite_filter).size(), 1uz);
+        assert_equal(registry.list_tests(case_filter).size(), 1uz);
+    });
+
+    it("runs filtered suites once with only matching test cases", [] {
+        auto registry = test_registry();
+        auto root_before_all_runs = 0;
+        auto root_before_each_runs = 0;
+        auto nested_before_all_runs = 0;
+        auto first_ran = false;
+        auto second_ran = false;
+        auto third_ran = false;
+
+        registry.add_suite("root", [&] {
+            registry.add_before_all_hook(hook("before_all", [&] {
+                root_before_all_runs++;
+            }));
+            registry.add_before_each_hook(hook("before_each", [&] {
+                root_before_each_runs++;
+            }));
+            registry.add_test("first selected", [&] {
+                first_ran = true;
+            });
+            registry.add_test("second ignored", [&] {
+                second_ran = true;
+            });
+            registry.add_suite("nested", [&] {
+                registry.add_before_all_hook(hook("before_all", [&] {
+                    nested_before_all_runs++;
+                }));
+                registry.add_test("third selected", [&] {
+                    third_ran = true;
+                });
+            });
+        });
+        auto filter = test_filter();
+        filter.name_pattern = "selected$";
+        auto reporter = recording_reporter();
+
+        assert_equal(registry.num_test_suites(filter), 2uz);
+        assert_equal(registry.num_test_cases(filter), 2uz);
+        assert_true(registry.run(reporter, filter));
+        assert_equal(root_before_all_runs, 1);
+        assert_equal(root_before_each_runs, 2);
+        assert_equal(nested_before_all_runs, 1);
+        assert_true(first_ran);
+        assert_false(second_ran);
+        assert_true(third_ran);
+        assert_not_contain(reporter.events, std::string("before test second ignored"));
     });
 
     it("runs one selected test by id", [] {
