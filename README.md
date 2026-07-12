@@ -60,7 +60,7 @@ c++ test/calculator.test.cpp $(pkg-config --cflags --libs kaycxx-test) -o my-pro
 
 ## Example Output
 
-Running the test executable produces a hierarchical report. Supported terminals add colors automatically.
+Running the test executable produces a hierarchical report. The test framework adds colors automatically when the output is connected to a supported terminal.
 
 When both tests pass:
 
