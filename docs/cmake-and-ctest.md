@@ -5,7 +5,7 @@
 ## Test Executable
 
 ```cmake
-find_package(kaycxx-test 0.0.4 CONFIG REQUIRED)
+find_package(kaycxx-test 0.0.5 CONFIG REQUIRED)
 
 file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS
     test/*.cpp
@@ -82,7 +82,7 @@ Wrap the test dependency and test targets in a `BUILD_TESTING` condition when th
 option(BUILD_TESTING "Build unit tests" ON)
 
 if(BUILD_TESTING)
-    find_package(kaycxx-test 0.0.4 CONFIG REQUIRED)
+    find_package(kaycxx-test 0.0.5 CONFIG REQUIRED)
 
     # Define the test executable, test target, and CTest discovery here.
 endif()

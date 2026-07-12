@@ -39,7 +39,7 @@ The example uses [kaycxx-assert] for assertions. Tests can use any other excepti
 CMake users consume the installed package with:
 
 ```cmake
-find_package(kaycxx-test 0.0.4 CONFIG REQUIRED)
+find_package(kaycxx-test 0.0.5 CONFIG REQUIRED)
 
 add_executable(my-project-tests
     test/calculator.test.cpp
