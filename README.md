@@ -4,6 +4,12 @@ C++ unit test framework.
 
 [GitHub] | [API Documentation]
 
+## Requirements
+
+- C++23 compiler and standard library
+- Exception support
+- Run-time type information (RTTI)
+
 ## Usage
 
 ```cpp

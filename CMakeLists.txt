@@ -19,7 +19,7 @@ git_require(kaycxx::assert 0.0.3)
 git_require(kaycxx::cli 0.0.5)
 git_require(kaycxx::term 0.0.2)
 
-set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
