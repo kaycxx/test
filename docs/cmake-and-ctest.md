@@ -38,12 +38,12 @@ add_custom_target(test
 Run it with:
 
 ```sh
-cmake --build --preset debug --target test
+cmake --build build --target test
 ```
 
 ## CTest Discovery
 
-`--write-ctest` writes one `add_test` entry for every unique full test description. Each CTest entry invokes the same executable with an exact escaped description pattern. This gives CTest per-test visibility while the direct `test` target keeps the framework's native report.
+`--write-ctest FILE` creates the specified CMake file. Inside that file, it writes one `add_test` entry for every unique full test description. Each CTest entry invokes the same executable with an exact escaped description pattern. This gives CTest per-test visibility while the direct `test` target keeps the framework's native report.
 
 ```cmake
 set(TEST_DISCOVERY_FILE "${CMAKE_CURRENT_BINARY_DIR}/my-project-tests.cmake")
@@ -62,31 +62,34 @@ add_custom_target(ctest
 )
 ```
 
-The include is optional because the discovery file does not exist until the test executable has been built. The generated file must not be created or emptied during CMake configuration. Reconfiguring then preserves existing discovery data, and linking a changed test executable rewrites it through `POST_BUILD`.
-
 Run the discovered tests with:
 
 ```sh
-ctest --test-dir build/debug
+ctest --test-dir build
 ```
 
 Use verbose mode to see the framework output for every invocation:
 
 ```sh
-FORCE_COLOR=1 ctest --test-dir build/debug -V
+FORCE_COLOR=1 ctest --test-dir build -V
 ```
 
 ## Optional Tests
 
-Keep the test dependency and targets behind `BUILD_TESTING` when consumers should be able to build the project without downloading or compiling test dependencies.
+Wrap the test dependency and test targets in a `BUILD_TESTING` condition when the project should also build without downloading or compiling test dependencies.
 
 ```cmake
 option(BUILD_TESTING "Build unit tests" ON)
-if(NOT BUILD_TESTING)
-    return()
-endif()
 
-find_package(kaycxx-test 0.0.4 CONFIG REQUIRED)
+if(BUILD_TESTING)
+    find_package(kaycxx-test 0.0.4 CONFIG REQUIRED)
+
+    # Define the test executable, test target, and CTest discovery here.
+endif()
 ```
 
-For kaycxx projects, this block lives in `cmake/Test.cmake`, which is included only when the project is top-level.
+Tests can then be disabled while configuring the project:
+
+```sh
+cmake -B build -D BUILD_TESTING=OFF
+```
