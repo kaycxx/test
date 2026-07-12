@@ -19,7 +19,16 @@ hook::hook(std::string_view name, callback body, std::source_location location)
       location_(location)
 {}
 
-void hook::run() {
+void hook::run(run_options const& options) {
+    if (options.break_on_exception) {
+        try {
+            body_();
+        } catch (kaycxx::assert::assertion_error const& error) {
+            throw detail::hook_error(name_ + " hook failed: " + error.what(), error.location().value_or(location_));
+        }
+        return;
+    }
+
     try {
         body_();
     } catch (kaycxx::assert::assertion_error const& error) {

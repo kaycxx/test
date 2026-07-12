@@ -58,15 +58,15 @@ void test_registry::add_after_all_hook(hook value) {
     current().add_after_all_hook(std::move(value));
 }
 
-bool test_registry::run(reporter& reporter) {
-    return run(reporter, test_filter());
+bool test_registry::run(reporter& reporter, run_options const& options) {
+    return run(reporter, test_filter(), options);
 }
 
-bool test_registry::run(reporter& reporter, test_filter const& filter) {
+bool test_registry::run(reporter& reporter, test_filter const& filter, run_options const& options) {
     auto const matcher = detail::test_matcher(filter);
     auto passed = true;
     for (auto& suite : root_suites_) {
-        passed = suite->run(reporter, matcher) && passed;
+        passed = suite->run(reporter, matcher, options) && passed;
     }
     return passed;
 }

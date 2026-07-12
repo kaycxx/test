@@ -100,4 +100,54 @@ suite("it") {
         assert_equal(reporter.failures.front().description(), "root unknown case");
         assert_equal(reporter.failures.front().error_message(), "Unknown exception");
     });
+
+    it("still reports assertion errors in break-on-exception mode", [] {
+        define_root_suite("root", [] {
+            it("assertion case", [] {
+                assert_equal(1, 2);
+            });
+        });
+        auto reporter = recording_reporter();
+        auto options = run_options();
+        options.break_on_exception = true;
+
+        assert_false(current_test_registry().run(reporter, options));
+        assert_equal(reporter.failures.size(), 1uz);
+        assert_contain(reporter.failures.front().error_message(), "Expected <1> to equal <2>");
+    });
+
+    it("lets standard exceptions escape in break-on-exception mode", [] {
+        define_root_suite("root", [] {
+            it("runtime case", [] {
+                throw std::runtime_error("boom");
+            });
+        });
+        auto reporter = recording_reporter();
+        auto options = run_options();
+        options.break_on_exception = true;
+
+        assert_throw<std::runtime_error>([&] {
+            current_test_registry().run(reporter, options);
+        }, "boom");
+    });
+
+    it("lets unknown exceptions escape in break-on-exception mode", [] {
+        define_root_suite("root", [] {
+            it("unknown case", [] {
+                throw 123;
+            });
+        });
+        auto reporter = recording_reporter();
+        auto options = run_options();
+        options.break_on_exception = true;
+        auto escaped = false;
+
+        try {
+            current_test_registry().run(reporter, options);
+        } catch (int const value) {
+            assert_equal(value, 123);
+            escaped = true;
+        }
+        assert_true(escaped);
+    });
 }

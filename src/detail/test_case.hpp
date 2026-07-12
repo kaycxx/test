@@ -52,9 +52,10 @@ public:
      *
      * @param reporter  Reporter receiving lifecycle events.
      * @param matcher   Test filter matcher.
+     * @param options   Test execution options.
      * @returns True if the test case passed, false if it failed.
      */
-    bool run(reporter& reporter, test_matcher const& matcher) override;
+    bool run(reporter& reporter, test_matcher const& matcher, run_options const& options) override;
 
     /**
      * Checks whether this test case is selected by a matcher.
@@ -81,8 +82,14 @@ public:
     test_counts counts(test_matcher const& matcher) const override;
 
 private:
-    /** Executes this test case without applying test filters. */
-    bool execute(reporter& reporter);
+    /**
+     * Executes this test case without applying test filters.
+     *
+     * @param reporter  Reporter receiving lifecycle events.
+     * @param options   Test execution options.
+     * @returns True if the test case passed, false if it failed.
+     */
+    bool execute(reporter& reporter, run_options const& options);
 
     /** Test callback to execute. */
     callback body_;

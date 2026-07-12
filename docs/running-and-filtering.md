@@ -47,6 +47,14 @@ Path filters and description patterns are combined with AND.
 
 Only suites containing selected tests are executed and reported. Their hooks run normally for the selected tests. A non-empty filter that matches no tests prints `No tests matched` and exits with status 1.
 
+## Debugging Unexpected Exceptions
+
+Use `-X` or `--break-on-exception` to let unexpected exceptions escape the test framework instead of recording them as test failures. An uncaught exception terminates the complete test run so a debugger can show the original call stack. Assertion errors are still reported normally because they already carry their source location.
+
+```sh
+gdb --args ./my-project-tests --break-on-exception
+```
+
 ## Command-Line Help
 
 Use `--help` to display the test executable's command usage, available options, and positional path filters.

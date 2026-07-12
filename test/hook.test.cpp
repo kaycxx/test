@@ -40,4 +40,16 @@ suite("hook") {
             value.run();
         }, "custom hook failed");
     });
+
+    it("lets unexpected exceptions escape in break-on-exception mode", [] {
+        auto value = hook("custom", [] {
+            throw std::runtime_error("boom");
+        });
+        auto options = run_options();
+        options.break_on_exception = true;
+
+        assert_throw<std::runtime_error>([&] {
+            value.run(options);
+        }, "boom");
+    });
 }

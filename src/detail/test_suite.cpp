@@ -53,25 +53,25 @@ void test_suite::add_after_all_hook(kaycxx::test::hook value) {
     after_all_hooks_.push_back(std::move(value));
 }
 
-void test_suite::run_before_each_hooks() {
+void test_suite::run_before_each_hooks(run_options const& options) {
     if (parent_) {
-        parent().run_before_each_hooks();
+        parent().run_before_each_hooks(options);
     }
     for (auto& hook : before_each_hooks_) {
-        hook.run();
+        hook.run(options);
     }
 }
 
-void test_suite::run_after_each_hooks() {
+void test_suite::run_after_each_hooks(run_options const& options) {
     for (auto& hook : after_each_hooks_) {
-        hook.run();
+        hook.run(options);
     }
     if (parent_) {
-        parent().run_after_each_hooks();
+        parent().run_after_each_hooks(options);
     }
 }
 
-bool test_suite::run(reporter& reporter, test_matcher const& matcher) {
+bool test_suite::run(reporter& reporter, test_matcher const& matcher, run_options const& options) {
     auto const selected = counts(matcher);
     if (selected.suites == 0) {
         return true;
@@ -81,7 +81,7 @@ bool test_suite::run(reporter& reporter, test_matcher const& matcher) {
 
     try {
         for (auto& hook : before_all_hooks_) {
-            hook.run();
+            hook.run(options);
         }
     } catch (hook_error const& error) {
         reporter.after_test_suite(failure(full_description(), error, error.location()), selected.tests);
@@ -90,12 +90,12 @@ bool test_suite::run(reporter& reporter, test_matcher const& matcher) {
 
     auto passed = true;
     for (auto& child : children_) {
-        passed = child->run(reporter, matcher) && passed;
+        passed = child->run(reporter, matcher, options) && passed;
     }
 
     try {
         for (auto& hook : after_all_hooks_) {
-            hook.run();
+            hook.run(options);
         }
     } catch (hook_error const& error) {
         reporter.after_test_suite(failure(full_description(), error, error.location()), 0);

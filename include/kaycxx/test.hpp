@@ -25,6 +25,7 @@ namespace test {}
 #include <kaycxx/test/failure.hpp>
 #include <kaycxx/test/hook.hpp>
 #include <kaycxx/test/it.hpp>
+#include <kaycxx/test/run_options.hpp>
 #include <kaycxx/test/run_tests.hpp>
 #include <kaycxx/test/skip.hpp>
 #include <kaycxx/test/skipped.hpp>

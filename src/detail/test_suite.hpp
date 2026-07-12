@@ -105,20 +105,29 @@ public:
      */
     void add_after_all_hook(kaycxx::test::hook value);
 
-    /** Runs before_each hooks from the root suite to this suite. */
-    void run_before_each_hooks();
+    /**
+     * Runs before_each hooks from the root suite to this suite.
+     *
+     * @param options  Test execution options.
+     */
+    void run_before_each_hooks(run_options const& options);
 
-    /** Runs after_each hooks from this suite to the root suite. */
-    void run_after_each_hooks();
+    /**
+     * Runs after_each hooks from this suite to the root suite.
+     *
+     * @param options  Test execution options.
+     */
+    void run_after_each_hooks(run_options const& options);
 
     /**
      * Executes this suite, including suite hooks and all child nodes in declaration order.
      *
      * @param reporter  Reporter receiving lifecycle events.
      * @param matcher   Test filter matcher.
+     * @param options   Test execution options.
      * @returns True if the suite passed, false if the suite or any child node failed.
      */
-    bool run(reporter& reporter, test_matcher const& matcher) override;
+    bool run(reporter& reporter, test_matcher const& matcher, run_options const& options) override;
 
     /**
      * Adds all test cases below this suite to a test list.

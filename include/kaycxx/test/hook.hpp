@@ -13,6 +13,7 @@
 #include <string_view>
 
 #include <kaycxx/test/callback.hpp>
+#include <kaycxx/test/run_options.hpp>
 
 namespace kaycxx::test {
 
@@ -32,8 +33,12 @@ public:
      */
     explicit hook(std::string_view name, callback body, std::source_location location = std::source_location::current());
 
-    /** Runs the hook and wraps thrown exceptions in a hook error with source location information. */
-    void run();
+    /**
+     * Runs the hook and wraps thrown exceptions in a hook error with source location information.
+     *
+     * @param options  Test execution options.
+     */
+    void run(run_options const& options = run_options());
 
 private:
     /** Hook callback to execute. */

@@ -17,6 +17,7 @@
 #include <vector>
 
 #include <kaycxx/test/reporter.hpp>
+#include <kaycxx/test/run_options.hpp>
 
 namespace kaycxx::test::detail {
 
@@ -62,9 +63,10 @@ public:
      *
      * @param reporter  Reporter receiving lifecycle events.
      * @param matcher   Test filter matcher.
+     * @param options   Test execution options.
      * @returns True if the node finished successfully, false if it recorded a failure.
      */
-    virtual bool run(reporter& reporter, test_matcher const& matcher) = 0;
+    virtual bool run(reporter& reporter, test_matcher const& matcher, run_options const& options) = 0;
 
     /**
      * Adds selected test cases below this node to a test list.

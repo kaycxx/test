@@ -19,6 +19,7 @@
 #include <kaycxx/test/callback.hpp>
 #include <kaycxx/test/hook.hpp>
 #include <kaycxx/test/reporter.hpp>
+#include <kaycxx/test/run_options.hpp>
 #include <kaycxx/test/skip.hpp>
 #include <kaycxx/test/test_filter.hpp>
 
@@ -106,9 +107,10 @@ public:
      * Executes all registered top-level suites in declaration order.
      *
      * @param reporter  Reporter receiving lifecycle events.
+     * @param options   Test execution options.
      * @returns True if all suites passed, false if any suite failed.
      */
-    bool run(reporter& reporter);
+    bool run(reporter& reporter, run_options const& options = {});
 
     /**
      * Executes registered tests selected by a filter.
@@ -117,9 +119,10 @@ public:
      *
      * @param reporter  Reporter receiving lifecycle events.
      * @param filter    Test selection filter.
+     * @param options   Test execution options.
      * @returns True if all selected suites passed, false if any selected suite failed.
      */
-    bool run(reporter& reporter, test_filter const& filter);
+    bool run(reporter& reporter, test_filter const& filter, run_options const& options = {});
 
     /**
      * Lists all registered test cases in execution order.
