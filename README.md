@@ -34,6 +34,8 @@ suite("calculator") {
 }
 ```
 
+The example uses [kaycxx-assert] for assertions. Tests can use any other exception-based assertion library or custom assertion functions because assertions are ordinary functions that report failures by throwing exceptions. An exception that leaves a test body is reported as a failed test.
+
 CMake users consume the installed package with:
 
 ```cmake
@@ -103,8 +105,6 @@ Finished in 31.7 µs
 - [Skipping Tests] explains unconditional and dynamic skip conditions.
 - [Running and Filtering] explains command-line filters, regular expressions, output, and exit codes.
 - [CMake and CTest] explains test executables, the standard `test` target, and per-test CTest discovery.
-
-Assertions are provided by [kaycxx-assert]. Additional assertion helpers can preserve structured failure details by throwing `kaycxx::assert::assertion_error`.
 
 ## Build From Source
 
