@@ -1,4 +1,4 @@
-INPUT                  = README.md include
+INPUT                  = README.md include docs
 STRIP_FROM_PATH        = include \
                          .
 STRIP_FROM_INC_PATH    = include

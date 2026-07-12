@@ -1,6 +1,6 @@
 # kaycxx-test
 
-C++ unit test framework.
+C++ unit test framework with hierarchical suites, lifecycle hooks, skipping, test filtering, and CTest discovery.
 
 [GitHub] | [API Documentation]
 
@@ -12,51 +12,87 @@ C++ unit test framework.
 
 ## Usage
 
+Tests are declared with one top-level `suite`, nested `describe` blocks, and `it` test cases. The linked test library provides `main()` and runs every registered suite.
+
 ```cpp
-#include <kaycxx/test.hpp>
 #include <kaycxx/assert.hpp>
+#include <kaycxx/test.hpp>
 
-using namespace kaycxx::test;
 using namespace kaycxx::assert;
+using namespace kaycxx::test;
 
-int main() {
+suite("calculator") {
+    describe("addition", [] {
+        it("adds positive numbers", [] {
+            assert_equal(2 + 3, 5);
+        });
 
-    return kaycxx::library_template::sum(1, 2);
+        it("adds negative numbers", [] {
+            assert_equal(-2 + -3, -5);
+        });
+    });
 }
+```
+
+Running the test executable produces a hierarchical report. Supported terminals add colors automatically.
+
+```text
+Starting unit tests
+
+calculator
+  addition
+    ✓ adds positive numbers (1.2 µs)
+    ✓ adds negative numbers (820 ns)
+
+2 tests, 2 passing
+Finished in 18.4 µs
 ```
 
 CMake users consume the installed package with:
 
 ```cmake
-find_package(kaycxx-library-template 1.0.0 CONFIG REQUIRED)
-target_link_libraries(my-target PRIVATE kaycxx::library-template)
+find_package(kaycxx-test 0.0.4 CONFIG REQUIRED)
+
+add_executable(my-project-tests
+    test/calculator.test.cpp
+)
+target_link_libraries(my-project-tests PRIVATE
+    my-project
+    kaycxx::test
+)
 ```
+
+No separate `main.cpp` is needed for the test executable.
 
 Non-CMake users can use pkg-config:
 
 ```sh
-c++ $(pkg-config --cflags kaycxx-library-template) -c main.cpp
-c++ main.o $(pkg-config --libs kaycxx-library-template)
+c++ test/calculator.test.cpp $(pkg-config --cflags --libs kaycxx-test) -o my-project-tests
 ```
+
+## Guides
+
+- [Writing Tests] explains `suite`, `describe`, `it`, registration order, dynamic test generation, and callback lifetimes.
+- [Hooks and State] explains setup and teardown hooks, inherited hook order, shared state, and hook failures.
+- [Skipping Tests] explains unconditional and dynamic skip conditions.
+- [Running and Filtering] explains command-line filters, regular expressions, output, and exit codes.
+- [CMake and CTest] explains test executables, the standard `test` target, and per-test CTest discovery.
+
+Assertions are provided by [kaycxx-assert]. Additional assertion helpers can preserve structured failure details by throwing `kaycxx::assert::assertion_error`.
 
 ## Build From Source
 
 ```sh
-cmake -B build
-cmake --build build
+cmake --preset release
+cmake --build --preset release
 ```
 
-A shared library is built by default. For a static build:
-
-```sh
-cmake -B build -D BUILD_SHARED_LIBS=OFF
-cmake --build build
-```
+`kaycxx-test` is always built as a static library because it supplies the test executable's `main()` function.
 
 ## Install
 
 ```sh
-cmake --install build --prefix /tmp/root
+cmake --install build/release --prefix /tmp/root
 ```
 
 If no prefix is specified, CMake installs to `/usr/local` by default on Unix systems.
@@ -66,16 +102,23 @@ If no prefix is specified, CMake installs to `/usr/local` by default on Unix sys
 Run all tests:
 
 ```sh
-cmake --build build --target test
+cmake --preset debug
+cmake --build --preset debug --target test
 ```
 
 Generate API documentation with Doxygen:
 
 ```sh
-cmake --build build --target apidoc
+cmake --build --preset debug --target apidoc
 ```
 
-The generated HTML documentation is written to `build/apidoc/html/index.html`.
+The generated HTML documentation is written to `build/debug/apidoc/html/index.html`.
 
-[GitHub]: https://github.com/kaycxx/library-template
-[API Documentation]: https://kaycxx.github.io/library-template/
+[GitHub]: https://github.com/kaycxx/test
+[API Documentation]: https://kaycxx.github.io/test/
+[kaycxx-assert]: https://github.com/kaycxx/assert
+[Writing Tests]: docs/writing-tests.md
+[Hooks and State]: docs/hooks-and-state.md
+[Skipping Tests]: docs/skipping-tests.md
+[Running and Filtering]: docs/running-and-filtering.md
+[CMake and CTest]: docs/cmake-and-ctest.md
