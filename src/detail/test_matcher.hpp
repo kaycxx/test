@@ -8,7 +8,6 @@
  * Defines internal test filter matching.
  */
 
-#include <optional>
 #include <regex>
 #include <source_location>
 #include <string>
@@ -27,7 +26,7 @@ public:
      *
      * @param filter  Test selection filter.
      *
-     * @throws std::regex_error  When the test name pattern is not a valid regular expression.
+     * @throws std::regex_error  When a test name pattern is not a valid regular expression.
      */
     explicit test_matcher(test_filter const& filter);
 
@@ -40,10 +39,10 @@ public:
     bool matches_path(std::source_location const& location) const;
 
     /**
-     * Checks whether a full test description matches the configured name pattern.
+     * Checks whether a full test description matches one of the configured name patterns.
      *
      * @param description  Full test description to check.
-     * @returns True when no name pattern is configured or the pattern matches.
+     * @returns True when no name patterns are configured or at least one pattern matches.
      */
     bool matches_name(std::string_view description) const;
 
@@ -58,8 +57,8 @@ private:
     /** Normalized source path substrings. */
     std::vector<std::string> paths_;
 
-    /** Compiled full-description pattern. */
-    std::optional<std::regex> name_pattern_;
+    /** Compiled full-description patterns. */
+    std::vector<std::regex> name_patterns_;
 };
 
 } // namespace kaycxx::test::detail

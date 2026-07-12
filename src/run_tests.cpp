@@ -81,7 +81,7 @@ bool write_ctest_file(test_registry const& registry, std::string_view file_name,
  */
 int run_filtered_tests(test_registry& registry, std::ostream& output, kaycxx::term::ansi_mode ansi_mode, test_filter const& filter) {
     auto const num_tests = registry.num_test_cases(filter);
-    if (num_tests == 0 && (!filter.paths.empty() || filter.name_pattern)) {
+    if (num_tests == 0 && (!filter.paths.empty() || !filter.name_patterns.empty())) {
         output << "No tests matched\n";
         return 1;
     }
@@ -106,7 +106,7 @@ int run_tests(int argc, char* argv[]) {
     });
     auto help = app.flag("help", "Show this help").action();
     auto ctest_file = app.option<std::string>("write-ctest", "FILE", "Write registered tests to a CTest include file").action();
-    auto name_pattern = app.option<std::string>("test-name-pattern", 't', "PATTERN", "Run tests whose full description matches PATTERN");
+    auto name_patterns = app.repeatable_option<std::string>("test-name-pattern", 't', "PATTERN", "Run tests whose full description matches PATTERN");
     auto paths = app.parameters<std::string>("PATH", "Run tests from matching files or directories");
 
     try {
@@ -119,8 +119,8 @@ int run_tests(int argc, char* argv[]) {
 
         auto filter = test_filter();
         filter.paths = arguments.get(paths);
-        if (arguments.has(name_pattern)) {
-            filter.name_pattern = arguments.get(name_pattern);
+        if (arguments.has(name_patterns)) {
+            filter.name_patterns = arguments.get(name_patterns);
         }
 
         if (arguments.has(ctest_file)) {

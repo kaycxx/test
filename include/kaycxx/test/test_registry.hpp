@@ -119,7 +119,7 @@ public:
      * @param filter    Test selection filter.
      * @returns True if all selected suites passed, false if any selected suite failed.
      *
-     * @throws std::regex_error  When the test name pattern is not a valid regular expression.
+     * @throws std::regex_error  When a test name pattern is not a valid regular expression.
      */
     bool run(reporter& reporter, test_filter const& filter);
 
@@ -140,7 +140,7 @@ public:
      *
      * @returns Unique full descriptions of selected test cases.
      *
-     * @throws std::regex_error  When the test name pattern is not a valid regular expression.
+     * @throws std::regex_error  When a test name pattern is not a valid regular expression.
      */
     std::vector<std::string> list_tests(test_filter const& filter) const;
 
@@ -157,7 +157,7 @@ public:
      * @param filter  Test selection filter.
      * @returns The number of selected top-level and nested suites.
      *
-     * @throws std::regex_error  When the test name pattern is not a valid regular expression.
+     * @throws std::regex_error  When a test name pattern is not a valid regular expression.
      */
     std::size_t num_test_suites(test_filter const& filter) const;
 
@@ -174,7 +174,7 @@ public:
      * @param filter  Test selection filter.
      * @returns The number of selected test cases.
      *
-     * @throws std::regex_error  When the test name pattern is not a valid regular expression.
+     * @throws std::regex_error  When a test name pattern is not a valid regular expression.
      */
     std::size_t num_test_cases(test_filter const& filter) const;
 

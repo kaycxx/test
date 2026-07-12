@@ -29,8 +29,10 @@ test_matcher::test_matcher(test_filter const& filter) {
     for (auto const& path : filter.paths) {
         paths_.push_back(normalize_path(path));
     }
-    if (filter.name_pattern) {
-        name_pattern_.emplace(*filter.name_pattern);
+
+    name_patterns_.reserve(filter.name_patterns.size());
+    for (auto const& pattern : filter.name_patterns) {
+        name_patterns_.emplace_back(pattern);
     }
 }
 
@@ -49,11 +51,20 @@ bool test_matcher::matches_path(std::source_location const& location) const {
 }
 
 bool test_matcher::matches_name(std::string_view description) const {
-    return !name_pattern_ || std::regex_search(description.begin(), description.end(), *name_pattern_);
+    if (name_patterns_.empty()) {
+        return true;
+    }
+
+    for (auto const& pattern : name_patterns_) {
+        if (std::regex_search(description.begin(), description.end(), pattern)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool test_matcher::has_filters() const noexcept {
-    return !paths_.empty() || name_pattern_.has_value();
+    return !paths_.empty() || !name_patterns_.empty();
 }
 
 } // namespace kaycxx::test::detail

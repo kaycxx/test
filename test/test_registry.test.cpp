@@ -78,12 +78,28 @@ suite("test_registry") {
         });
         auto filter = test_filter();
         filter.paths = { "missing", "test\\test_registry.test.cpp" };
-        filter.name_pattern = "second$";
+        filter.name_patterns = { "second$" };
 
         auto const tests = registry.list_tests(filter);
 
         assert_equal(tests.size(), 1uz);
         assert_equal(tests.at(0), "root second");
+    });
+
+    it("combines full-description patterns with OR", [] {
+        auto registry = test_registry();
+
+        registry.add_suite("root", [&] {
+            registry.add_test("first", [] {});
+            registry.add_test("second", [] {});
+            registry.add_test("third", [] {});
+        });
+        auto filter = test_filter();
+        filter.name_patterns = { "first$", "third$" };
+
+        auto const tests = registry.list_tests(filter);
+
+        assert_equal(tests, std::vector<std::string>{ "root first", "root third" });
     });
 
     it("matches test paths inherited from parent suites", [] {
@@ -133,7 +149,7 @@ suite("test_registry") {
             });
         });
         auto filter = test_filter();
-        filter.name_pattern = "selected$";
+        filter.name_patterns = { "selected$" };
         auto reporter = recording_reporter();
 
         assert_equal(registry.num_test_suites(filter), 2uz);
