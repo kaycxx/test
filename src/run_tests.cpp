@@ -3,9 +3,10 @@
 
 #include <kaycxx/test/run_tests.hpp>
 
+#include <kaycxx/cli.hpp>
+
 #include <fstream>
 #include <iostream>
-#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -15,21 +16,6 @@
 namespace kaycxx::test {
 
 namespace {
-
-/** Command selected by command-line arguments. */
-enum class command {
-    /** Run all tests. */
-    run_all,
-
-    /** List all tests. */
-    list_tests,
-
-    /** Run one selected test. */
-    run_test,
-
-    /** Write a generated CTest include file. */
-    write_ctest
-};
 
 /**
  * Quotes a value as a CMake bracket argument.
@@ -88,18 +74,6 @@ bool write_ctest_file(test_registry const& registry, std::string_view file_name,
     return true;
 }
 
-/**
- * Prints command-line usage.
- *
- * @param output  Output stream receiving the help text.
- */
-void print_usage(std::ostream& output) {
-    output << "Usage:\n"
-           << "  test-binary --list-tests\n"
-           << "  test-binary --run-test <id>\n"
-           << "  test-binary --write-ctest <file> <executable>\n";
-}
-
 } // namespace
 
 int run_tests() {
@@ -107,63 +81,45 @@ int run_tests() {
 }
 
 int run_tests(int argc, char* argv[]) {
-    auto ansi_mode = kaycxx::term::ansi_mode::automatic;
-    auto selected_command = command::run_all;
-    auto run_test_id = std::string_view();
-    auto ctest_file_name = std::string_view();
-    auto ctest_executable = std::string_view();
+    auto const command_name = argc > 0 ? std::string_view(argv[0]) : std::string_view("test");
+    auto app = kaycxx::cli::command(command_name, {
+        .description = "Runs registered unit tests."
+    });
+    auto help = app.flag("help", "Show this help").action();
+    auto list_tests = app.flag("list-tests", "List registered tests").action();
+    auto selected_test = app.option<std::string>("run-test", "ID", "Run one registered test").action();
+    auto ctest_file = app.option<std::string>("write-ctest", "FILE", "Write registered tests to a CTest include file").action();
 
-    for (auto index = 1; index < argc; index++) {
-        auto const argument = std::string_view(argv[index]);
-        if (argument == "--help") {
-            print_usage(std::cout);
-            return 0;
-        }
-        if (argument == "--list-tests") {
-            selected_command = command::list_tests;
-            continue;
-        }
-        if (argument == "--write-ctest") {
-            if (index + 2 >= argc) {
-                std::cerr << "--write-ctest requires <file> and <executable>\n";
-                return 2;
-            }
-            selected_command = command::write_ctest;
-            ctest_file_name = std::string_view(argv[++index]);
-            ctest_executable = std::string_view(argv[++index]);
-            continue;
-        }
-        if (argument == "--run-test") {
-            if (index + 1 >= argc) {
-                std::cerr << "--run-test requires <id>\n";
-                return 2;
-            }
-            selected_command = command::run_test;
-            run_test_id = std::string_view(argv[++index]);
-            continue;
+    try {
+        auto arguments = app.parse(argc, argv);
+        if (arguments.get(help)) {
+            return app.print_help();
         }
 
-        std::cerr << "Unknown argument: " << argument << '\n';
-        print_usage(std::cerr);
-        return 2;
-    }
+        arguments.validate();
 
-    switch (selected_command) {
-        case command::run_all:
-            return run_tests(std::cout, ansi_mode);
-        case command::list_tests:
+        if (arguments.get(list_tests)) {
             write_test_list(default_registry(), std::cout);
             return 0;
-        case command::run_test:
-            return run_test(run_test_id, std::cout, ansi_mode);
-        case command::write_ctest:
-            if (!write_ctest_file(default_registry(), ctest_file_name, ctest_executable)) {
-                std::cerr << "Unable to write CTest file: " << ctest_file_name << '\n';
+        }
+        if (arguments.has(selected_test)) {
+            return run_test(arguments.get(selected_test), std::cout, kaycxx::term::ansi_mode::automatic);
+        }
+        if (arguments.has(ctest_file)) {
+            auto const& file_name = arguments.get(ctest_file);
+            if (!write_ctest_file(default_registry(), file_name, command_name)) {
+                std::cerr << "Unable to write CTest file: " << file_name << '\n';
                 return 1;
             }
             return 0;
+        }
+
+        return run_tests(std::cout, kaycxx::term::ansi_mode::automatic);
+    } catch (kaycxx::cli::parse_error const& error) {
+        std::cerr << app.name() << ": " << error.what() << '\n';
+        std::cerr << "Try '" << app.name() << " --help' for more information.\n";
+        return 2;
     }
-    return 2;
 }
 
 int run_tests(std::ostream& output) {

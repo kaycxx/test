@@ -26,7 +26,7 @@ int run_tests();
 /**
  * Runs the global test registry according to command-line arguments.
  *
- * Supported arguments are --list-tests, --write-ctest, --run-test, and --color.
+ * Supported arguments are --help, --list-tests, --run-test, and --write-ctest.
  *
  * @param argc  Number of command-line arguments.
  * @param argv  Command-line argument values.

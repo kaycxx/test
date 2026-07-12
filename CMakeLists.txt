@@ -16,7 +16,7 @@ include(cmake/CompilerWarnings.cmake)
 include(cmake/GitDeps.cmake)
 
 git_require(kaycxx::assert 0.0.3)
-git_require(kaycxx::cli 0.0.4)
+git_require(kaycxx::cli 0.0.5)
 git_require(kaycxx::term 0.0.2)
 
 set(CMAKE_CXX_STANDARD 26)

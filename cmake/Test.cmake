@@ -15,7 +15,7 @@ file(WRITE "${TEST_DISCOVERY_FILE}" "")
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/CTestTestfile.cmake" "include(\"${TEST_DISCOVERY_FILE}\" OPTIONAL)\n")
 
 add_custom_command(TARGET ${NAME}-tests POST_BUILD
-    COMMAND ${NAME}-tests --write-ctest "${TEST_DISCOVERY_FILE}" "$<TARGET_FILE:${NAME}-tests>"
+    COMMAND ${NAME}-tests --write-ctest "${TEST_DISCOVERY_FILE}"
     COMMENT "Discovering ${PACKAGE_NAME} tests"
     VERBATIM
 )
