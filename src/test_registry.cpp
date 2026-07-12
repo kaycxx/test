@@ -3,11 +3,11 @@
 
 #include <kaycxx/test/test_registry.hpp>
 
-#include <charconv>
+#include <functional>
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <system_error>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -24,7 +24,7 @@ test_registry::~test_registry() = default;
 
 void test_registry::add_suite(std::string_view description, callback body, std::source_location location) {
     auto& suite = add_suite_node(description, location);
-    suite_stack_.push_back(&suite);
+    suite_stack_.push_back(suite);
     try {
         body();
         suite_stack_.pop_back();
@@ -59,11 +59,7 @@ void test_registry::add_after_all_hook(hook value) {
 }
 
 bool test_registry::run(reporter& reporter) {
-    auto passed = true;
-    for (auto& suite : root_suites_) {
-        passed = suite->run(reporter) && passed;
-    }
-    return passed;
+    return run(reporter, test_filter());
 }
 
 bool test_registry::run(reporter& reporter, test_filter const& filter) {
@@ -75,76 +71,50 @@ bool test_registry::run(reporter& reporter, test_filter const& filter) {
     return passed;
 }
 
-bool test_registry::run_test(std::string_view id, reporter& reporter) {
-    std::size_t target_id = 0;
-    auto const* first = id.data();
-    auto const* last = first + id.size();
-    auto const result = std::from_chars(first, last, target_id);
-    if (result.ec != std::errc() || result.ptr != last || target_id == 0) {
-        return false;
+std::vector<std::string> test_registry::list_tests() const {
+    return list_tests(test_filter());
+}
+
+std::vector<std::string> test_registry::list_tests(test_filter const& filter) const {
+    auto const matcher = detail::test_matcher(filter);
+    auto tests = std::vector<std::string>();
+    for (auto const& suite : root_suites_) {
+        suite->list_tests(tests, matcher);
     }
 
-    auto current_id = 0uz;
-    for (auto& suite : root_suites_) {
-        auto const passed = suite->run_test(target_id, current_id, reporter);
-        if (current_id == target_id) {
-            return passed;
+    auto descriptions = std::unordered_set<std::string>();
+    auto result = std::vector<std::string>();
+    result.reserve(tests.size());
+    for (auto& test : tests) {
+        if (descriptions.insert(test).second) {
+            result.push_back(std::move(test));
         }
     }
-    return false;
-}
-
-std::vector<test_info> test_registry::list_tests() const {
-    auto tests = std::vector<test_info>();
-    auto next_id = 1uz;
-    for (auto const& suite : root_suites_) {
-        suite->list_tests(tests, next_id);
-    }
-    return tests;
-}
-
-std::vector<test_info> test_registry::list_tests(test_filter const& filter) const {
-    auto const matcher = detail::test_matcher(filter);
-    auto tests = std::vector<test_info>();
-    auto next_id = 1uz;
-    for (auto const& suite : root_suites_) {
-        suite->list_tests(tests, next_id, matcher);
-    }
-    return tests;
+    return result;
 }
 
 std::size_t test_registry::num_test_suites() const {
-    std::size_t count = 0;
-    for (auto const& suite : root_suites_) {
-        count = count + 1 + suite->num_test_suites();
-    }
-    return count;
+    return num_test_suites(test_filter());
 }
 
 std::size_t test_registry::num_test_suites(test_filter const& filter) const {
     auto const matcher = detail::test_matcher(filter);
     std::size_t count = 0;
     for (auto const& suite : root_suites_) {
-        if (suite->num_test_cases(matcher) > 0) {
-            count = count + 1 + suite->num_test_suites(matcher);
-        }
+        count += suite->counts(matcher).suites;
     }
     return count;
 }
 
 std::size_t test_registry::num_test_cases() const {
-    std::size_t count = 0;
-    for (auto const& suite : root_suites_) {
-        count += suite->num_test_cases();
-    }
-    return count;
+    return num_test_cases(test_filter());
 }
 
 std::size_t test_registry::num_test_cases(test_filter const& filter) const {
     auto const matcher = detail::test_matcher(filter);
     std::size_t count = 0;
     for (auto const& suite : root_suites_) {
-        count += suite->num_test_cases(matcher);
+        count += suite->counts(matcher).tests;
     }
     return count;
 }
@@ -153,7 +123,7 @@ detail::test_suite& test_registry::current() {
     if (suite_stack_.empty()) {
         throw std::logic_error("No active test suite");
     }
-    return *suite_stack_.back();
+    return suite_stack_.back().get();
 }
 
 detail::test_suite& test_registry::add_suite_node(std::string_view description, std::source_location location) {
@@ -176,27 +146,27 @@ namespace {
 /**
  * Stores the registry currently receiving DSL registrations.
  *
- * @returns Reference to the active registry pointer.
+ * @returns Reference to the active registry reference.
  */
-test_registry*& active_registry_pointer() {
-    static auto* registry = &default_registry();
+std::reference_wrapper<test_registry>& active_registry_reference() {
+    static auto registry = std::ref(default_registry());
     return registry;
 }
 
 } // namespace
 
 test_registry& active_registry() {
-    return *active_registry_pointer();
+    return active_registry_reference().get();
 }
 
 test_registry& set_active_registry(test_registry& registry) {
     auto& previous = active_registry();
-    active_registry_pointer() = &registry;
+    active_registry_reference() = registry;
     return previous;
 }
 
 void reset_active_registry() {
-    active_registry_pointer() = &default_registry();
+    active_registry_reference() = default_registry();
 }
 
 namespace detail {

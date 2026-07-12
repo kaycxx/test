@@ -3,7 +3,6 @@
 
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 #include <kaycxx/assert.hpp>
 #include <kaycxx/test.hpp>
@@ -55,6 +54,7 @@ suite("test_registry") {
 
         registry.add_suite("root", [&] {
             registry.add_test("first", [] {});
+            registry.add_test("first", [] {});
             registry.add_suite("nested", [&] {
                 registry.add_test("second", [] {});
                 registry.add_test("third", [] {});
@@ -64,15 +64,12 @@ suite("test_registry") {
         auto const tests = registry.list_tests();
 
         assert_equal(tests.size(), 3uz);
-        assert_equal(tests.at(0).id, "1");
-        assert_equal(tests.at(0).description, "root first");
-        assert_equal(tests.at(1).id, "2");
-        assert_equal(tests.at(1).description, "root nested second");
-        assert_equal(tests.at(2).id, "3");
-        assert_equal(tests.at(2).description, "root nested third");
+        assert_equal(tests.at(0), "root first");
+        assert_equal(tests.at(1), "root nested second");
+        assert_equal(tests.at(2), "root nested third");
     });
 
-    it("filters tests by source path and keeps their original ids", [] {
+    it("filters tests by source path and full-description pattern (special characters)", [] {
         auto registry = test_registry();
 
         registry.add_suite("root", [&] {
@@ -86,8 +83,7 @@ suite("test_registry") {
         auto const tests = registry.list_tests(filter);
 
         assert_equal(tests.size(), 1uz);
-        assert_equal(tests.at(0).id, "2");
-        assert_equal(tests.at(0).description, "root second");
+        assert_equal(tests.at(0), "root second");
     });
 
     it("matches test paths inherited from parent suites", [] {
@@ -150,56 +146,6 @@ suite("test_registry") {
         assert_false(second_ran);
         assert_true(third_ran);
         assert_not_contain(reporter.events, std::string("before test second ignored"));
-    });
-
-    it("runs one selected test by id", [] {
-        auto registry = test_registry();
-        auto execution = std::vector<std::string>();
-
-        registry.add_suite("root", [&] {
-            registry.add_before_all_hook(hook("before_all", [&] {
-                execution.push_back("root before_all");
-            }));
-            registry.add_before_each_hook(hook("before_each", [&] {
-                execution.push_back("root before_each");
-            }));
-            registry.add_test("first", [&] {
-                execution.push_back("first");
-            });
-            registry.add_suite("nested", [&] {
-                registry.add_before_each_hook(hook("before_each", [&] {
-                    execution.push_back("nested before_each");
-                }));
-                registry.add_test("second", [&] {
-                    execution.push_back("second");
-                });
-            });
-        });
-        auto reporter = recording_reporter();
-
-        assert_true(registry.run_test("2", reporter));
-
-        assert_equal(execution.size(), 4uz);
-        assert_equal(execution.at(0), "root before_all");
-        assert_equal(execution.at(1), "root before_each");
-        assert_equal(execution.at(2), "nested before_each");
-        assert_equal(execution.at(3), "second");
-        assert_equal(reporter.events.at(0), "before suite root");
-        assert_equal(reporter.events.at(1), "before suite nested");
-        assert_equal(reporter.events.at(2), "before test second");
-        assert_equal(reporter.events.at(3), "pass test second");
-    });
-
-    it("rejects unknown selected test ids", [] {
-        auto registry = test_registry();
-        auto reporter = recording_reporter();
-
-        registry.add_suite("root", [&] {
-            registry.add_test("first", [] {});
-        });
-
-        assert_false(registry.run_test("unknown", reporter));
-        assert_true(reporter.events.empty());
     });
 
     it("rejects test cases outside of suites", [] {

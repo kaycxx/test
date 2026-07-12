@@ -47,6 +47,13 @@ public:
      */
     bool matches_name(std::string_view description) const;
 
+    /**
+     * Checks whether any path or name filters are configured.
+     *
+     * @returns True when the matcher restricts the selected tests.
+     */
+    bool has_filters() const noexcept;
+
 private:
     /** Normalized source path substrings. */
     std::vector<std::string> paths_;

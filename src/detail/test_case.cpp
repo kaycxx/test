@@ -21,7 +21,7 @@ test_case::test_case(
     std::string_view description,
     callback body,
     std::source_location location,
-    test_suite* parent,
+    test_suite& parent,
     std::optional<skip_condition> skip_condition
 )
     : test_node(description, location, parent),
@@ -29,16 +29,20 @@ test_case::test_case(
       skip_condition_(std::move(skip_condition))
 {}
 
-bool test_case::run(reporter& reporter) {
+bool test_case::run(reporter& reporter, test_matcher const& matcher) {
+    return !matches(matcher) || execute(reporter);
+}
+
+bool test_case::execute(reporter& reporter) {
     reporter.before_test_case(description_);
     try {
         if (skip_condition_ && skip_condition_->should_skip()) {
             reporter.after_test_case(description_, skipped(skip_condition_->reason()));
             return true;
         }
-        parent_->run_before_each_hooks();
+        parent().run_before_each_hooks();
         body_();
-        parent_->run_after_each_hooks();
+        parent().run_after_each_hooks();
         reporter.after_test_case(description_);
         return true;
     } catch (detail::hook_error const& error) {
@@ -57,9 +61,14 @@ bool test_case::matches(test_matcher const& matcher) const {
     return matches_path(matcher) && matcher.matches_name(full_description());
 }
 
-void test_case::list_tests(std::vector<test_info>& tests, std::size_t& next_id) const {
-    tests.push_back({std::to_string(next_id), full_description()});
-    next_id++;
+void test_case::list_tests(std::vector<std::string>& tests, test_matcher const& matcher) const {
+    if (matches(matcher)) {
+        tests.push_back(full_description());
+    }
+}
+
+test_counts test_case::counts(test_matcher const& matcher) const {
+    return {0, matches(matcher) ? 1uz : 0uz};
 }
 
 } // namespace kaycxx::test::detail

@@ -9,6 +9,7 @@
  */
 
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <source_location>
 #include <string>
@@ -28,17 +29,6 @@ class test_suite;
 } // namespace kaycxx::test::detail
 
 namespace kaycxx::test {
-
-/**
- * Describes a registered test case.
- */
-struct test_info {
-    /** Stable numeric test id within the current binary. */
-    std::string id;
-
-    /** Full human-readable test description. */
-    std::string description;
-};
 
 /**
  * Owns a set of test suites and the registration stack used while suite bodies execute.
@@ -134,32 +124,25 @@ public:
     bool run(reporter& reporter, test_filter const& filter);
 
     /**
-     * Executes one registered test case by id.
-     *
-     * @param id        Test id from list_tests().
-     * @param reporter  Reporter receiving lifecycle events.
-     * @returns True if the selected test passed, false if it failed or the id was unknown.
-     */
-    bool run_test(std::string_view id, reporter& reporter);
-
-    /**
      * Lists all registered test cases in execution order.
      *
-     * @returns Registered test cases.
+     * Duplicate full descriptions are returned only once.
+     *
+     * @returns Unique full descriptions of registered test cases.
      */
-    std::vector<test_info> list_tests() const;
+    std::vector<std::string> list_tests() const;
 
     /**
      * Lists registered test cases selected by a filter in execution order.
      *
-     * Test ids remain stable and correspond to the unfiltered test list.
-     *
      * @param filter  Test selection filter.
-     * @returns Selected registered test cases.
+     * Duplicate full descriptions are returned only once.
+     *
+     * @returns Unique full descriptions of selected test cases.
      *
      * @throws std::regex_error  When the test name pattern is not a valid regular expression.
      */
-    std::vector<test_info> list_tests(test_filter const& filter) const;
+    std::vector<std::string> list_tests(test_filter const& filter) const;
 
     /**
      * Returns the number of all registered top-level and nested suites.
@@ -200,7 +183,7 @@ private:
     std::vector<std::unique_ptr<detail::test_suite>> root_suites_;
 
     /** Active suite stack used while registration callbacks execute. */
-    std::vector<detail::test_suite*> suite_stack_;
+    std::vector<std::reference_wrapper<detail::test_suite>> suite_stack_;
 
     /**
      * Returns the suite currently receiving registrations.

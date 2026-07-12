@@ -52,4 +52,8 @@ bool test_matcher::matches_name(std::string_view description) const {
     return !name_pattern_ || std::regex_search(description.begin(), description.end(), *name_pattern_);
 }
 
+bool test_matcher::has_filters() const noexcept {
+    return !paths_.empty() || name_pattern_.has_value();
+}
+
 } // namespace kaycxx::test::detail

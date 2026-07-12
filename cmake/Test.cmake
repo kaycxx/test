@@ -11,7 +11,6 @@ target_link_libraries(${NAME}-tests PRIVATE
 )
 
 set(TEST_DISCOVERY_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}-tests.cmake")
-file(WRITE "${TEST_DISCOVERY_FILE}" "")
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/CTestTestfile.cmake" "include(\"${TEST_DISCOVERY_FILE}\" OPTIONAL)\n")
 
 add_custom_command(TARGET ${NAME}-tests POST_BUILD

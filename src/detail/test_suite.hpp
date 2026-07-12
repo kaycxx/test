@@ -8,10 +8,9 @@
  * Defines the internal test suite node.
  */
 
-#include <cstddef>
 #include <memory>
-#include <optional>
 #include <source_location>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -38,9 +37,17 @@ public:
      *
      * @param description  Human-readable suite description.
      * @param location     Source location of the suite declaration.
-     * @param parent       Optional parent suite.
      */
-    explicit test_suite(std::string_view description, std::source_location location, test_suite* parent = nullptr);
+    explicit test_suite(std::string_view description, std::source_location location);
+
+    /**
+     * Creates a nested test suite.
+     *
+     * @param description  Human-readable suite description.
+     * @param location     Source location of the suite declaration.
+     * @param parent       Parent suite owning this suite.
+     */
+    explicit test_suite(std::string_view description, std::source_location location, test_suite& parent);
 
     /**
      * Adds a nested suite.
@@ -108,71 +115,26 @@ public:
      * Executes this suite, including suite hooks and all child nodes in declaration order.
      *
      * @param reporter  Reporter receiving lifecycle events.
+     * @param matcher   Test filter matcher.
      * @returns True if the suite passed, false if the suite or any child node failed.
      */
-    bool run(reporter& reporter) override;
-
-    /**
-     * Executes selected tests in this suite, including suite hooks and selected child nodes.
-     *
-     * @param reporter  Reporter receiving lifecycle events.
-     * @param matcher   Test filter matcher.
-     * @returns True if the selected tests passed or no tests are selected, false otherwise.
-     */
-    bool run(reporter& reporter, test_matcher const& matcher);
-
-    /**
-     * Executes one registered test case by numeric id.
-     *
-     * @param target_id   Numeric test id to run.
-     * @param current_id  Current traversal id.
-     * @param reporter    Reporter receiving lifecycle events.
-     * @returns True if the selected test passed or is not part of this suite, false if it failed.
-     */
-    bool run_test(std::size_t target_id, std::size_t& current_id, reporter& reporter);
+    bool run(reporter& reporter, test_matcher const& matcher) override;
 
     /**
      * Adds all test cases below this suite to a test list.
      *
-     * @param tests    Test list receiving test cases.
-     * @param next_id  Next numeric test id.
-     */
-    void list_tests(std::vector<test_info>& tests, std::size_t& next_id) const;
-
-    /**
-     * Adds selected test cases below this suite to a test list.
-     *
-     * @param tests    Test list receiving selected test cases.
-     * @param next_id  Next numeric test id in the unfiltered tree.
+     * @param tests    Test list receiving full test descriptions.
      * @param matcher  Test filter matcher.
      */
-    void list_tests(std::vector<test_info>& tests, std::size_t& next_id, test_matcher const& matcher) const;
+    void list_tests(std::vector<std::string>& tests, test_matcher const& matcher) const override;
 
     /**
-     * @returns The number of registered test suites.
-     */
-    std::size_t num_test_suites() const;
-
-    /**
-     * Returns the number of nested suites containing selected tests.
+     * Counts this suite and all selected descendants.
      *
      * @param matcher  Test filter matcher.
-     * @returns The number of selected nested suites.
+     * @returns Selected suite and test counts.
      */
-    std::size_t num_test_suites(test_matcher const& matcher) const;
-
-    /**
-     * @returns The number of registered test cases.
-     */
-    std::size_t num_test_cases() const;
-
-    /**
-     * Returns the number of selected test cases below this suite.
-     *
-     * @param matcher  Test filter matcher.
-     * @returns The number of selected test cases.
-     */
-    std::size_t num_test_cases(test_matcher const& matcher) const;
+    test_counts counts(test_matcher const& matcher) const override;
 
 private:
     /** Child suites and test cases in declaration order. */
@@ -189,24 +151,6 @@ private:
 
     /** Hooks executed after this suite's child nodes run. */
     std::vector<kaycxx::test::hook> after_all_hooks_;
-
-    /**
-     * Returns the number of nested suites on the path to a selected test.
-     *
-     * @param target_id   Numeric test id to find.
-     * @param current_id  Current traversal id.
-     * @returns Number of nested suites on the selected path, or no value when the test is not below this suite.
-     */
-    std::optional<std::size_t> selected_suite_count(std::size_t target_id, std::size_t& current_id) const;
-
-    /**
-     * Executes either the complete suite or its selected tests.
-     *
-     * @param reporter  Reporter receiving lifecycle events.
-     * @param matcher   Optional test filter matcher, or null to execute all tests.
-     * @returns True if the executed tests passed, false otherwise.
-     */
-    bool run(reporter& reporter, test_matcher const* matcher);
 
 };
 

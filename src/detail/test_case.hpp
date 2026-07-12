@@ -8,9 +8,9 @@
  * Defines the internal test case node.
  */
 
-#include <cstddef>
 #include <optional>
 #include <source_location>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -43,7 +43,7 @@ public:
         std::string_view description,
         callback body,
         std::source_location location,
-        test_suite* parent,
+        test_suite& parent,
         std::optional<skip_condition> skip_condition = std::nullopt
     );
 
@@ -51,9 +51,10 @@ public:
      * Executes the test case with the parent suite's before_each and after_each hooks.
      *
      * @param reporter  Reporter receiving lifecycle events.
+     * @param matcher   Test filter matcher.
      * @returns True if the test case passed, false if it failed.
      */
-    bool run(reporter& reporter) override;
+    bool run(reporter& reporter, test_matcher const& matcher) override;
 
     /**
      * Checks whether this test case is selected by a matcher.
@@ -66,12 +67,23 @@ public:
     /**
      * Adds this test case to a test list.
      *
-     * @param tests    Test list receiving the test case.
-     * @param next_id  Next numeric test id.
+     * @param tests    Test list receiving the full test description.
+     * @param matcher  Test filter matcher.
      */
-    void list_tests(std::vector<test_info>& tests, std::size_t& next_id) const;
+    void list_tests(std::vector<std::string>& tests, test_matcher const& matcher) const override;
+
+    /**
+     * Counts this test case when it is selected by the matcher.
+     *
+     * @param matcher  Test filter matcher.
+     * @returns Zero suites and either zero or one selected test.
+     */
+    test_counts counts(test_matcher const& matcher) const override;
 
 private:
+    /** Executes this test case without applying test filters. */
+    bool execute(reporter& reporter);
+
     /** Test callback to execute. */
     callback body_;
 

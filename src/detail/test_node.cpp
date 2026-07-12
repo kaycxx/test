@@ -10,7 +10,12 @@
 
 namespace kaycxx::test::detail {
 
-test_node::test_node(std::string_view description, std::source_location location, test_suite* parent)
+test_node::test_node(std::string_view description, std::source_location location)
+    : description_(description),
+      location_(location)
+{}
+
+test_node::test_node(std::string_view description, std::source_location location, test_suite& parent)
     : description_(description),
       location_(location),
       parent_(parent)
@@ -24,7 +29,7 @@ std::string test_node::full_description() const {
     if (!parent_) {
         return description_;
     }
-    auto parent_description = parent_->full_description();
+    auto parent_description = parent_->get().full_description();
     if (parent_description == "") {
         return description_;
     }
@@ -32,7 +37,11 @@ std::string test_node::full_description() const {
 }
 
 bool test_node::matches_path(test_matcher const& matcher) const {
-    return matcher.matches_path(location_) || (parent_ != nullptr && parent_->matches_path(matcher));
+    return matcher.matches_path(location_) || (parent_ && parent_->get().matches_path(matcher));
+}
+
+test_suite& test_node::parent() const {
+    return parent_.value().get();
 }
 
 } // namespace kaycxx::test::detail

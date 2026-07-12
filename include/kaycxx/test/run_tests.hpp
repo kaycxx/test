@@ -9,7 +9,6 @@
  */
 
 #include <iosfwd>
-#include <string_view>
 
 #include <kaycxx/term/ansi_mode.hpp>
 #include <kaycxx/test/test_registry.hpp>
@@ -26,8 +25,8 @@ int run_tests();
 /**
  * Runs the global test registry according to command-line arguments.
  *
- * Positional path filters select tests by source file or directory. The -t and --test-name-pattern options select tests by their full descriptions.
- * Supported actions are --help, --list-tests, --run-test, and --write-ctest.
+ * Positional path filters select tests by source file or directory. The -t and --test-name-pattern options select full descriptions with a regular expression.
+ * Supported actions are --help and --write-ctest.
  *
  * @param argc  Number of command-line arguments.
  * @param argv  Command-line argument values.
@@ -70,26 +69,5 @@ int run_tests(test_registry& registry, std::ostream& output);
  * @returns Process exit code 0 when all tests pass, otherwise 1.
  */
 int run_tests(test_registry& registry, std::ostream& output, kaycxx::term::ansi_mode ansi_mode);
-
-/**
- * Runs one test from the global test registry and writes the report to the given stream.
- *
- * @param id         Test id from test_registry::list_tests().
- * @param output     Output stream receiving the test report.
- * @param ansi_mode  Controls ANSI/VT control sequence output.
- * @returns Process exit code 0 when the selected test passes, otherwise 1.
- */
-int run_test(std::string_view id, std::ostream& output, kaycxx::term::ansi_mode ansi_mode);
-
-/**
- * Runs one test from the given registry and writes the report to the given stream.
- *
- * @param registry   Registry containing the test to run.
- * @param id         Test id from test_registry::list_tests().
- * @param output     Output stream receiving the test report.
- * @param ansi_mode  Controls ANSI/VT control sequence output.
- * @returns Process exit code 0 when the selected test passes, otherwise 1.
- */
-int run_test(test_registry& registry, std::string_view id, std::ostream& output, kaycxx::term::ansi_mode ansi_mode);
 
 } // namespace kaycxx::test

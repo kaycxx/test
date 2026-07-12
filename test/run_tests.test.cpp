@@ -1,8 +1,12 @@
 // SPDX-FileCopyrightText: 2026 Klaus Reimer <k@ailis.de>
 // SPDX-License-Identifier: MIT
 
+#include <array>
+#include <filesystem>
+#include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 
 #include <kaycxx/assert.hpp>
 #include <kaycxx/test.hpp>
@@ -71,28 +75,26 @@ suite("run_tests") {
         assert_contain(text, "boom");
     });
 
-    it("runs one selected test", [] {
-        auto first_ran = false;
-        auto second_ran = false;
+    it("writes CTest entries for names containing\nnewlines; regex .^$|()[]{}*+?\\ and brackets ]] ]=] ]==]", [] {
+        auto const file_name = (std::filesystem::temp_directory_path() / "kaycxx-test-write-ctest.test.cmake").string();
+        auto executable = std::string("test executable ]] ]=] ]==]");
+        auto action = std::string("--write-ctest");
+        auto output_file = file_name;
+        auto arguments = std::array<char*, 3>({ executable.data(), action.data(), output_file.data() });
 
-        define_root_suite("selected", [&] {
-            it("first", [&] {
-                first_ran = true;
-            });
-            it("second", [&] {
-                second_ran = true;
-            });
-        });
+        assert_equal(run_tests(static_cast<int>(arguments.size()), arguments.data()), 0);
 
-        auto output = std::ostringstream();
+        auto input = std::ifstream(file_name);
+        assert_true(input.good());
+        auto content = std::ostringstream();
+        content << input.rdbuf();
+        assert_contain(content.str(), R"EXPECTED(add_test([===[run_tests writes CTest entries for names containing
+newlines; regex .^$|()[]{}*+?\ and brackets ]] ]=] ]==]]===] [===[test executable ]] ]=] ]==]]===] --test-name-pattern [[^run_tests writes CTest entries for names containing
+newlines; regex \.\^\$\|\(\)\[\]\{\}\*\+\?\\ and brackets \]\] \]=\] \]==\]$]])
+)EXPECTED");
 
-        assert_equal(run_test(current_test_registry(), "2", output, kaycxx::term::ansi_mode::none), 0);
-        assert_false(first_ran);
-        assert_true(second_ran);
-        auto const text = output.str();
-        assert_contain(text, "1 tests, 1 passing");
-        assert_contain(text, "second");
-        assert_not_contain(text, "first");
+        input.close();
+        std::filesystem::remove(file_name);
     });
 
     it("skips test before hooks and body run", [] {
