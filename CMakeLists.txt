@@ -5,7 +5,7 @@ set(NAMESPACE kaycxx)
 set(PACKAGE_NAME ${NAMESPACE}-${NAME})
 
 project(${PACKAGE_NAME}
-    VERSION 0.0.3
+    VERSION 0.0.4
     DESCRIPTION "C++ unit test framework"
     HOMEPAGE_URL "https://github.com/${NAMESPACE}/${NAME}"
     LANGUAGES CXX
