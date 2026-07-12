@@ -8,6 +8,7 @@
  * Defines test selection filters.
  */
 
+#include <regex>
 #include <string>
 #include <vector>
 
@@ -23,8 +24,8 @@ struct test_filter {
     /** Source path substrings to match against tests and their parent suites. */
     std::vector<std::string> paths;
 
-    /** Regular expressions matched against full test descriptions. */
-    std::vector<std::string> name_patterns;
+    /** Compiled regular expressions matched against full test descriptions. */
+    std::vector<std::regex> name_patterns;
 };
 
 } // namespace kaycxx::test

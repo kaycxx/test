@@ -17,6 +17,34 @@ namespace kaycxx::test {
 
 namespace {
 
+/** Command-line value containing a compiled regular expression. */
+class regex_pattern {
+public:
+    /**
+     * Compiles a regular expression from its command-line representation.
+     *
+     * @param pattern  Regular expression to compile.
+     *
+     * @throws std::regex_error  When the pattern is not a valid regular expression.
+     */
+    explicit regex_pattern(std::string_view pattern)
+        : value_(std::string(pattern)) {
+    }
+
+    /**
+     * Returns the compiled regular expression.
+     *
+     * @returns Compiled regular expression.
+     */
+    std::regex const& value() const noexcept {
+        return value_;
+    }
+
+private:
+    /** Compiled regular expression. */
+    std::regex value_;
+};
+
 /**
  * Quotes a value as a CMake bracket argument.
  *
@@ -106,8 +134,9 @@ int run_tests(int argc, char* argv[]) {
     });
     auto help = app.flag("help", "Show this help").action();
     auto ctest_file = app.option<std::string>("write-ctest", "FILE", "Write registered tests to a CTest include file").action();
-    auto name_patterns = app.repeatable_option<std::string>("test-name-pattern", 't', "PATTERN", "Run tests whose full description matches PATTERN");
+    auto name_patterns = app.repeatable_option<regex_pattern>("test-name-pattern", 't', "PATTERN", "Run tests whose full description matches PATTERN");
     auto paths = app.parameters<std::string>("PATH", "Run tests from matching files or directories");
+    auto filter = test_filter();
 
     try {
         auto arguments = app.parse(argc, argv);
@@ -116,11 +145,13 @@ int run_tests(int argc, char* argv[]) {
         }
 
         arguments.validate();
-
-        auto filter = test_filter();
         filter.paths = arguments.get(paths);
         if (arguments.has(name_patterns)) {
-            filter.name_patterns = arguments.get(name_patterns);
+            auto const& patterns = arguments.get(name_patterns);
+            filter.name_patterns.reserve(patterns.size());
+            for (auto const& pattern : patterns) {
+                filter.name_patterns.push_back(pattern.value());
+            }
         }
 
         if (arguments.has(ctest_file)) {
@@ -131,15 +162,13 @@ int run_tests(int argc, char* argv[]) {
             }
             return 0;
         }
-        return run_filtered_tests(default_registry(), std::cout, kaycxx::term::ansi_mode::automatic, filter);
     } catch (kaycxx::cli::parse_error const& error) {
         std::cerr << app.name() << ": " << error.what() << '\n';
         std::cerr << "Try '" << app.name() << " --help' for more information.\n";
         return 2;
-    } catch (std::regex_error const& error) {
-        std::cerr << app.name() << ": Invalid test name pattern (" << error.what() << ")\n";
-        return 2;
     }
+
+    return run_filtered_tests(default_registry(), std::cout, kaycxx::term::ansi_mode::automatic, filter);
 }
 
 int run_tests(std::ostream& output) {

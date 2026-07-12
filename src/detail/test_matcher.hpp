@@ -25,8 +25,6 @@ public:
      * Creates a matcher for a test filter.
      *
      * @param filter  Test selection filter.
-     *
-     * @throws std::regex_error  When a test name pattern is not a valid regular expression.
      */
     explicit test_matcher(test_filter const& filter);
 

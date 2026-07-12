@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Klaus Reimer <k@ailis.de>
 // SPDX-License-Identifier: MIT
 
+#include <regex>
 #include <stdexcept>
 #include <string>
 
@@ -78,7 +79,7 @@ suite("test_registry") {
         });
         auto filter = test_filter();
         filter.paths = { "missing", "test\\test_registry.test.cpp" };
-        filter.name_patterns = { "second$" };
+        filter.name_patterns = { std::regex("second$") };
 
         auto const tests = registry.list_tests(filter);
 
@@ -95,7 +96,7 @@ suite("test_registry") {
             registry.add_test("third", [] {});
         });
         auto filter = test_filter();
-        filter.name_patterns = { "first$", "third$" };
+        filter.name_patterns = { std::regex("first$"), std::regex("third$") };
 
         auto const tests = registry.list_tests(filter);
 
@@ -149,7 +150,7 @@ suite("test_registry") {
             });
         });
         auto filter = test_filter();
-        filter.name_patterns = { "selected$" };
+        filter.name_patterns = { std::regex("selected$") };
         auto reporter = recording_reporter();
 
         assert_equal(registry.num_test_suites(filter), 2uz);

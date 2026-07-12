@@ -24,15 +24,11 @@ std::string normalize_path(std::string path) {
 
 } // namespace
 
-test_matcher::test_matcher(test_filter const& filter) {
+test_matcher::test_matcher(test_filter const& filter)
+    : name_patterns_(filter.name_patterns) {
     paths_.reserve(filter.paths.size());
     for (auto const& path : filter.paths) {
         paths_.push_back(normalize_path(path));
-    }
-
-    name_patterns_.reserve(filter.name_patterns.size());
-    for (auto const& pattern : filter.name_patterns) {
-        name_patterns_.emplace_back(pattern);
     }
 }
 
